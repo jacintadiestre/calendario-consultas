@@ -1,4 +1,4 @@
-# 📅 Sistema de Reserva de Consultas - Prof. Jacinta Diestre
+# 📅 Sistema de Reserva horario de Consultas - Prof. Jacinta Diestre
 
 Sistema web para reserva de horarios de consulta académica con envío automático de emails de confirmación.
 
