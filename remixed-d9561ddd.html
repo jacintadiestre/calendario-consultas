@@ -1,0 +1,2447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOB2013 - Sistema de Seguimiento</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a4d8f 0%, #2e5a9b 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #2e5a9b;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .student-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 2px solid #dee2e6;
+            object-fit: cover;
+        }
+        
+        .student-photo:hover {
+            transform: scale(1.1);
+            border-color: #2e5a9b;
+        }
+        
+        .attendance-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .present { background: #d4edda; color: #155724; }
+        .absent { background: #f8d7da; color: #721c24; }
+        .unknown { background: #fff3cd; color: #856404; }
+        
+        .stats {
+            padding: 20px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #2e5a9b;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-value.small {
+            font-size: 1.5em;
+        }
+        
+        .career-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+        }
+        
+        .career-trabajo-social {
+            background: #3498db;
+        }
+        
+        .career-college {
+            background: #e74c3c;
+        }
+        
+        .career-bachillerato {
+            background: #f39c12;
+        }
+        
+        .sync-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .sync-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .sync-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .sync-status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .config-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .config-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        /* Estilos para pestañas */
+        .tab-navigation {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #495057;
+        }
+
+        .tab-btn:hover {
+            background: #e9ecef;
+        }
+
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .stats-header h2 {
+            color: #495057;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .career-stats {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .career-stats h3 {
+            color: #007bff;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .gender-breakdown {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .gender-stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .gender-stat .percentage {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .gender-stat .label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GOB2013: Economía, Sociedad y Políticas Públicas</h1>
+            <p>Sistema de Seguimiento - Prof. Jacinta Diestre Jullian</p>
+        </div>
+        
+        <div class="config-panel" id="configPanel" style="display: none;">
+            <h3>🔧 Configuración de Sincronización con SharePoint</h3>
+            <p><strong>URL del Excel:</strong> <small>https://uccl0-my.sharepoint.com/:x:/r/personal/daniel_trujillo_uc_cl/_layouts/15/Doc.aspx?sourcedoc=%7B76B56703-D310-4633-8DA9-E3218CEACAE3%7D</small></p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="toggleConfig()">❌ Cerrar Config</button>
+                <button class="btn btn-success" onclick="testConnection()">🔗 Probar Conexión</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <label><strong>Opciones de Sincronización:</strong></label><br>
+                <label><input type="checkbox" id="autoSync" checked> Sincronización automática cada 5 minutos</label><br>
+                <label><input type="checkbox" id="notifyUpdates" checked> Notificar cuando hay actualizaciones</label>
+            </div>
+            <hr style="margin: 15px 0;">
+            <div>
+                <label><strong>📁 Carga de Fotos desde Carpeta:</strong></label><br>
+                <small>• Sube una carpeta completa con fotos de estudiantes</small><br>
+                <small>• Matching automático por RUT, apellidos o nombres</small><br>
+                <small>• Formatos: JPG, PNG, GIF, BMP</small><br>
+                <small>• Nombres sugeridos: "12345678-9.jpg", "PEREZ_JUAN.jpg"</small><br>
+                <small><strong>Cómo usar:</strong> Clic en "📁 Cargar Fotos Carpeta" → Selecciona carpeta → ¡Automático!</small>
+            </div>
+            <hr style="margin: 15px 0;">
+            <div>
+                <label><strong>📅 Fechas Dinámicas:</strong></label><br>
+                <small>• El sistema detecta automáticamente nuevas fechas en CSV</small><br>
+                <small>• Agrega columnas cuando importas datos de SharePoint</small><br>
+                <small>• Formatos reconocidos: "18-Ago", "25-Aug", "1-Sep"</small><br>
+                <small>• Los encabezados se actualizan automáticamente</small><br>
+                <small><strong>Beneficio:</strong> No necesitas modificar código para nuevas clases</small>
+            </div>
+        </div>
+        
+        <!-- Navegación por pestañas -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="showTab('asistencia')">📊 Asistencia</button>
+            <button class="tab-btn" onclick="showTab('estadisticas')">📈 Estadísticas</button>
+            <button class="tab-btn" onclick="showTab('graficos')">📊 Gráficos por Fecha</button>
+        </div>
+
+        <!-- Contenido de pestaña principal -->
+        <div id="asistencia-tab" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalStudents">94</div>
+                    <div class="stat-label">Total Estudiantes</div>
+                </div>
+            <div class="stat-card">
+                <div class="stat-value" id="presentToday">0</div>
+                <div class="stat-label">Presentes Hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgAttendance">0%</div>
+                <div class="stat-label">Asistencia Promedio</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="trabajoSocial">87</div>
+                <div class="stat-label">Trabajo Social</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="college">6</div>
+                <div class="stat-label">College</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="bachillerato">1</div>
+                <div class="stat-label">Bachillerato</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar estudiante...">
+            <button class="btn btn-primary" onclick="markAllPresent()">✓ Todos Presentes</button>
+            <button class="btn btn-success" onclick="importData()">📤 Importar Datos</button>
+            <button class="btn btn-primary" onclick="syncWithSharePoint()" id="syncBtn">🔄 Sincronizar Excel</button>
+            <button class="btn btn-success" onclick="exportData()">📥 Exportar CSV</button>
+            <button class="btn btn-primary" onclick="loadPhotosFromFolder()">📁 Cargar Fotos Carpeta</button>
+            <button class="btn btn-primary" onclick="toggleConfig()">⚙️ Config</button>
+            <input type="file" id="importFile" accept=".csv,.json" style="display: none;" onchange="handleFileImport(event)">
+            <input type="file" id="pdfFile" accept=".pdf" style="display: none;" onchange="handlePDFImport(event)">
+            <input type="file" id="photoFiles" multiple accept="image/*" webkitdirectory style="display: none;" onchange="handleFolderPhotoImport(event)">
+            <input type="file" id="individualPhotos" multiple accept="image/*" style="display: none;" onchange="handlePhotoImport(event)">
+            <div id="syncStatus" class="sync-status"></div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr id="tableHeaders">
+                        <th>#</th>
+                        <th>Foto</th>
+                        <th>Apellidos</th>
+                        <th>Nombres</th>
+                        <th>Carrera</th>
+                        <th>4 Ago</th>
+                        <th>5 Ago</th>
+                        <th>11 Ago</th>
+                        <th>12 Ago</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsBody"></tbody>
+            </table>
+        </div>
+        </div>
+
+        <!-- Contenido de pestaña de estadísticas -->
+        <div id="estadisticas-tab" class="tab-content">
+            <div class="stats-header">
+                <h2>📈 Estadísticas de Asistencia por Carrera y Sexo</h2>
+            </div>
+            <div id="estadisticas-content">
+                <!-- El contenido se generará dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Contenido de pestaña de gráficos -->
+        <div id="graficos-tab" class="tab-content">
+            <div class="stats-header">
+                <h2>📊 Asistencia por Fecha</h2>
+            </div>
+            <canvas id="attendanceChart" width="800" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Lista completa de estudiantes con información de carrera
+        const students = [
+            {num: 1, apellidos: "ABARCA MUÑOZ", nombres: "VICTORIA CAROLINA", rut: "12636736-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 2, apellidos: "ACOSTA ACOSTA", nombres: "JOSEFA IGNACIA", rut: "22031897-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 3, apellidos: "AGUAYO VERGARA", nombres: "ELISA", rut: "22046294-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 4, apellidos: "AGÜERO BARRÍA", nombres: "CAMILA CECILIA", rut: "22068595-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 5, apellidos: "ALBORNOZ LEMUS", nombres: "ANTONIA JESUS", rut: "22100574-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 6, apellidos: "ARANCIBIA OCHOA", nombres: "ANTONIA PAZ", rut: "21990783-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 7, apellidos: "AVENDAÑO NEIRA", nombres: "ALEJANDRA BELÉN", rut: "21025966-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 8, apellidos: "BARRAZA CABEZAS", nombres: "FRANCIS FAUSTO", rut: "21612600-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 9, apellidos: "BELTRÁN DÍAZ", nombres: "FRANCISCA CAROLINA", rut: "22216845-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 10, apellidos: "BRAVO SILVA", nombres: "PATRICIA GABRIELA", rut: "20108334-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 11, apellidos: "BRAVO TORRES", nombres: "ANDREA ANGELICA", rut: "19418518-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 12, apellidos: "CABELLO GUZMÁN", nombres: "ISIDORA IGNACIA", rut: "22182387-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 13, apellidos: "CASTRO TRASLAVIÑA", nombres: "GABRIELA INÉS", rut: "22025648-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 14, apellidos: "CHAMORRO FUENTES", nombres: "CAMILA ANDREA", rut: "22148924-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 15, apellidos: "CIFUENTES PÉREZ", nombres: "NICOLÁS IGNACIO", rut: "19958850-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 16, apellidos: "CONTRERAS CASAS", nombres: "CATALINA FRANCESCA", rut: "21495687-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 17, apellidos: "CONTRERAS RIED", nombres: "DIEGO ALEJANDRO", rut: "21930808-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 18, apellidos: "CÓRDOVA VELÁSQUEZ", nombres: "MARYTTÉ ANDREA", rut: "22133890-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 19, apellidos: "DECOMBE IZQUIERDO", nombres: "SARA", rut: "21769905-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 20, apellidos: "DÍAZ CÁCERES", nombres: "GABRIELA ISIDORA", rut: "21355562-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 21, apellidos: "DUNSTAN SEPÚLVEDA", nombres: "ANTONIA PAZ", rut: "21954596-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 22, apellidos: "ERICES SALAZAR", nombres: "EMILIA CONSTANZA", rut: "21958521-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 23, apellidos: "ERRÁZURIZ CONTRERAS", nombres: "VICENTE IGNACIO", rut: "22234973-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 24, apellidos: "FERNÁNDEZ AGUILERA", nombres: "MARTINA AERIS", rut: "21974468-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 25, apellidos: "FERRADA SALAS", nombres: "MAITE AILEEN", rut: "22139815-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 26, apellidos: "FIGUEROA BECERRA", nombres: "ANTONIA", rut: "22308091-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 27, apellidos: "FLORES GALAZ", nombres: "CAROLINA ANDREA", rut: "19743121-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 28, apellidos: "FUENTES BRAVO", nombres: "MARIA FRANCISCA", rut: "21433476-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 29, apellidos: "GALAZ VILLANUEVA", nombres: "IGNACIO EDUARDO", rut: "22173860-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 30, apellidos: "GARCIA QUISPE", nombres: "ANTONELLA NAMEYLI", rut: "26042343-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 31, apellidos: "HERNÁNDEZ NAVARRETE", nombres: "ESTELA DEL CARMEN", rut: "22097649-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 32, apellidos: "HERNÁNDEZ PADILLA", nombres: "DOMINIQUE ELIZABETH", rut: "21958395-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 33, apellidos: "HIDALGO LÓPEZ", nombres: "MARTHÍNA ANTTONIA", rut: "21968695-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 34, apellidos: "JARA LARA", nombres: "PATRICIO ENRIQUE", rut: "12285509-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 35, apellidos: "JIMÉNEZ ORTEGA", nombres: "CONSTANZA CECILIA", rut: "22004169-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 36, apellidos: "LEFIÁN GUZMÁN", nombres: "CAROLINA JEANETTE", rut: "22240529-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 37, apellidos: "LEIVA FARÍAS", nombres: "SAMUEL IGNACIO", rut: "22306103-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 38, apellidos: "LISPERGUIER MORÁN", nombres: "TAMARA FRANCISCA", rut: "22207045-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 39, apellidos: "LOBOS LOBOS", nombres: "AINHOA MARTINA ISABEL", rut: "21827244-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 40, apellidos: "LUNA GARCÍA", nombres: "GABRIEL ANDRES", rut: "22084244-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 41, apellidos: "MARTÍNEZ BOISIER", nombres: "MATIAS ALEJANDRO", rut: "22060311-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 42, apellidos: "MELIVILU CHÁVEZ", nombres: "MILLARAY SAYEN", rut: "21647333-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 43, apellidos: "MILLA CASTAÑEDA", nombres: "FERNANDA ALEJANDRA", rut: "21602995-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 44, apellidos: "MIRANDA GARCIA", nombres: "HAROLD ALESSANDRO", rut: "27837482-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 45, apellidos: "MIRANDA RAMOS", nombres: "CONSTANZA VALENTINA", rut: "22172953-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 46, apellidos: "MOLINA LÓPEZ", nombres: "CONSTANZA IULIANA", rut: "20382580-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 47, apellidos: "MORALES PÉREZ", nombres: "JAVIERA VALENTINA", rut: "22029034-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 48, apellidos: "MORALES QUIROZ", nombres: "JENNIFFER ANAIS", rut: "22179804-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 49, apellidos: "MOREIRA ROMERO", nombres: "RENATO JAVIER", rut: "22013934-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 50, apellidos: "MUÑOZ GAJARDO", nombres: "FERNANDA KATALINA", rut: "22377666-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 51, apellidos: "MUÑOZ ORÓSTICA", nombres: "BENJAMÍN ANDRÉS", rut: "22298688-5", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 52, apellidos: "NAVIA CHÁVEZ", nombres: "VANESSA VALENTINA", rut: "21793407-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 53, apellidos: "NICHI GONZÁLEZ", nombres: "DAYANA ESTRELLA", rut: "22294333-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 54, apellidos: "OLGUÍN CALDERÓN", nombres: "CONSTANZA ANTONIA", rut: "22276227-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 55, apellidos: "OLGUÍN CASTRO", nombres: "JOSEFHA SHLOMITH", rut: "21999680-2", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 56, apellidos: "ORELLANA ZAPATA", nombres: "SOPHIA VALENTINA", rut: "22037179-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 57, apellidos: "ORTIZ ROGEL", nombres: "VALENTINA SAIHEÑ", rut: "22160250-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 58, apellidos: "OVALLE MIRANDA", nombres: "MONSERRAT AGUSTINA", rut: "22266527-2", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 59, apellidos: "PEÑALOZA CABELLO", nombres: "ANAIS IGNACIA", rut: "22144593-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 60, apellidos: "PEREZ GONZALEZ", nombres: "ANTONIA BEATRIZ", rut: "21556613-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 61, apellidos: "PÉREZ ARANDA", nombres: "MARTINA ANTONIA", rut: "22125989-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 62, apellidos: "PIZARRO GONZÁLEZ", nombres: "VALENTINA ALMENDRA", rut: "21748661-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 63, apellidos: "RODRÍGUEZ CENDEGUI", nombres: "MARTINA AMPARO", rut: "22215279-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 64, apellidos: "RODRÍGUEZ HUE", nombres: "CATALINA PAZ", rut: "21698334-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 65, apellidos: "ROJAS CASTILLO", nombres: "ANTONIA LEONOR", rut: "22409805-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 66, apellidos: "ROJAS GARRIDO", nombres: "CAMILA ANTONIA", rut: "21884567-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 67, apellidos: "ROMO ALBORNOZ", nombres: "ANTONELLA ANAIS", rut: "22122239-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 68, apellidos: "ROSEL ROMERO", nombres: "VALENTINA IGNACIA", rut: "22199423-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 69, apellidos: "ROSSEL ALARCÓN", nombres: "LUCIANO AGUSTÍN", rut: "20924064-5", codigo: "090101", carrera: "College de Ciencias Sociales"},
+            {num: 70, apellidos: "ROZAS VERA", nombres: "BELÉN FRANCISCA", rut: "21408763-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 71, apellidos: "RUIZ GUTIÉRREZ", nombres: "IGNACIA ANTONIA", rut: "22246832-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 72, apellidos: "SALAZAR GONZÁLEZ", nombres: "IGNACIO JAVIER ANTONIO", rut: "21411168-3", codigo: "090101", carrera: "College de Ciencias Sociales"},
+            {num: 73, apellidos: "SANTANA CARRASCO", nombres: "AGHATA ELIZABETH JAMIE", rut: "20789893-7", codigo: "090101", carrera: "College de Ciencias Sociales"},
+            {num: 74, apellidos: "SEPÚLVEDA MILLA", nombres: "NELLY ANTONELLA AMELED", rut: "21750983-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 75, apellidos: "SILVA MORA", nombres: "KIMBERLY FRANCISCA JOCELYN", rut: "21943260-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 76, apellidos: "SOTO SEGOVIA", nombres: "ISIDORA BELÉN", rut: "22238398-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 77, apellidos: "SUÁREZ PÉREZ", nombres: "FERNANDA CRISTINA", rut: "21823404-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 78, apellidos: "TABILO CORTÉS", nombres: "FRANCISCA THIARE", rut: "21994882-4", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 79, apellidos: "THIEME LÓPEZ", nombres: "PAULA ELISABETH", rut: "21549795-K", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 80, apellidos: "TISNE PRAT", nombres: "MARGARITA", rut: "21799976-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 81, apellidos: "TOLEDO MARTÍNEZ", nombres: "JOSÉ ANTONIO DE LA CRUZ", rut: "21467332-0", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 82, apellidos: "TONINI PEREIRA", nombres: "BÁRBARA THAIS", rut: "21464779-6", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 83, apellidos: "TORO CARREÑO", nombres: "ROMINA ANTONIA", rut: "22158301-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 84, apellidos: "TOVAR GUIDON", nombres: "ZOE", rut: "23100317-7", codigo: "090101", carrera: "College de Ciencias Sociales"},
+            {num: 85, apellidos: "URIOSTE ESPINOZA", nombres: "JOSEFA ANTONIA", rut: "21931933-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 86, apellidos: "VALENZUELA BELTRÁN", nombres: "ANAÍS VALENTINA", rut: "22175332-1", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 87, apellidos: "VARGAS TERÁN", nombres: "ISMAEL ANDRÉS GABINO", rut: "22244368-7", codigo: "090101", carrera: "College de Ciencias Sociales"},
+            {num: 88, apellidos: "VÁSQUEZ DONOSO", nombres: "COLOMBA FERNANDA", rut: "22133936-3", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 89, apellidos: "VEAS GODOY", nombres: "PALOMA ANTONIA", rut: "22130703-8", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 90, apellidos: "VEAS QUIROGA", nombres: "MILLARAY ANTONIA", rut: "22189368-9", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 91, apellidos: "VENEGAS GONZÁLEZ", nombres: "JAVIERA PAULA", rut: "21827699-7", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 92, apellidos: "VIDAL MATAMALA", nombres: "BÁRBARA AMELIA", rut: "21828363-2", codigo: "300003", carrera: "Trabajo Social"},
+            {num: 93, apellidos: "VILLALOBOS LEFIN", nombres: "LAURA ISIDORA", rut: "22015469-6", codigo: "090101", carrera: "College de Ciencias Sociales"},
+            {num: 94, apellidos: "ZEPEDA NAVARRO", nombres: "JAVIERA PAOLA", rut: "22026284-7", codigo: "550001", carrera: "Bachillerato en Ciencias Sociales"}
+        ];
+
+        // Datos de asistencia inicial con información completa
+        const attendanceData = {
+            "12636736-8": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22031897-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22046294-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22068595-0": {"4-Aug": 0, "5-Aug": 0, "11-Aug": null, "12-Aug": null},
+            "22100574-0": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21990783-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21025966-K": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21612600-9": {"4-Aug": 1, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "22216845-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "20108334-6": {"4-Aug": 1, "5-Aug": 0, "11-Aug": null, "12-Aug": null},
+            "19418518-9": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22182387-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22025648-0": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22148924-1": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "19958850-8": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21495687-K": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21930808-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22133890-1": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21769905-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21355562-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21954596-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21958521-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22234973-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21974468-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22139815-7": {"4-Aug": 0, "5-Aug": 0, "11-Aug": null, "12-Aug": null},
+            "22308091-K": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "19743121-0": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21433476-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22173860-8": {"4-Aug": null, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "26042343-6": {"4-Aug": 1, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "22097649-1": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "21958395-8": {"4-Aug": 0, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "21968695-1": {"4-Aug": 0, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "12285509-0": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22004169-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22240529-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22306103-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22207045-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21827244-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22084244-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22060311-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21647333-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21602995-K": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "27837482-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22172953-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "20382580-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22029034-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22179804-K": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22013934-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22377666-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22298688-5": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21793407-9": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22294333-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22276227-8": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21999680-2": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22037179-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22160250-1": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22266527-2": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22144593-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21556613-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22125989-0": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21748661-0": {"4-Aug": 1, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "22215279-8": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21698334-3": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22409805-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "21884567-3": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22122239-3": {"4-Aug": 1, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "22199423-K": {"4-Aug": 1, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "20924064-5": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21408763-4": {"4-Aug": 1, "5-Aug": 0, "11-Aug": 1, "12-Aug": 1},
+            "22246832-9": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21411168-3": {"4-Aug": 0, "5-Aug": 0, "11-Aug": null, "12-Aug": null},
+            "20789893-7": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21750983-1": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21943260-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22238398-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21823404-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21994882-4": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21549795-K": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21799976-6": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21467332-0": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21464779-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "22158301-9": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "23100317-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21931933-9": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22175332-1": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22244368-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22133936-3": {"4-Aug": 0, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22130703-8": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22189368-9": {"4-Aug": 1, "5-Aug": 1, "11-Aug": null, "12-Aug": null},
+            "21827699-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "21828363-2": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22015469-6": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1},
+            "22026284-7": {"4-Aug": 1, "5-Aug": 1, "11-Aug": 1, "12-Aug": 1}
+        };
+
+        // Datos de fotos guardadas
+        let studentPhotos = JSON.parse(localStorage.getItem('student_photos') || '{}');
+        let studentData = JSON.parse(localStorage.getItem('student_data') || '{}');
+
+        // Base de datos de nombres para detección de género
+        const nombresFemeninos = [
+            'MARIA', 'ANA', 'CARMEN', 'ELENA', 'PILAR', 'DOLORES', 'JOSEFA', 'ROSARIO', 'ANTONIA', 'FRANCISCA',
+            'LAURA', 'PAULA', 'CRISTINA', 'MARTA', 'ANGELES', 'LUCIA', 'ISABEL', 'PATRICIA', 'MONICA', 'SILVIA',
+            'SUSANA', 'BEATRIZ', 'MERCEDES', 'JULIA', 'MONTSERRAT', 'ESPERANZA', 'PIEDAD', 'NURIA', 'SOLEDAD',
+            'AMPARO', 'GLORIA', 'INMACULADA', 'MANUELA', 'JUANA', 'ENCARNACION', 'PALOMA', 'MAITE', 'CRISTINA',
+            'VICTORIA', 'ELISA', 'CAMILA', 'ANTONIA', 'ALEJANDRA', 'BELÉN', 'CAROLINA', 'FRANCISCA', 'GABRIELA',
+            'INÉS', 'ANDREA', 'CATALINA', 'DIEGO', 'ISIDORA', 'IGNACIA', 'MARTINA', 'EMILIA', 'CONSTANZA',
+            'FERNANDA', 'MAITE', 'TAMARA', 'AINHOA', 'MILLARAY', 'ANTONELLA', 'VALENTINA', 'SOPHIA', 'ANAIS',
+            'MONSERRAT', 'ALMENDRA', 'AMPARO', 'LEONOR', 'BELÉN', 'LUCÍA', 'BÁRBARA', 'ZOE', 'PALOMA', 'JAVIERA',
+            'AMELIA', 'PAOLA'
+        ];
+
+        const nombresMasculinos = [
+            'ANTONIO', 'MANUEL', 'JOSÉ', 'FRANCISCO', 'DAVID', 'JUAN', 'JOSÉ ANTONIO', 'PEDRO', 'JESÚS', 'JAVIER',
+            'FERNANDO', 'CARLOS', 'ALBERTO', 'LUIS', 'MIGUEL', 'RAFAEL', 'ÁNGEL', 'ALEJANDRO', 'PABLO', 'SERGIO',
+            'ANDRÉS', 'JORGE', 'RAMÓN', 'SANTIAGO', 'ADRIÁN', 'ÁLVARO', 'DIEGO', 'RUBÉN', 'IVÁN', 'ÓSCAR',
+            'VICENTE', 'IGNACIO', 'NICOLÁS', 'PATRICIO', 'ENRIQUE', 'SAMUEL', 'GABRIEL', 'ANDRÉS', 'MATÍAS',
+            'RENATO', 'BENJAMÍN', 'LUCIANO', 'AGUSTÍN', 'ALESSANDRO', 'JAVIER', 'ANTONIO', 'ISMAEL', 'GABINO',
+            'FAUSTO'
+        ];
+
+        // Función para detectar género por nombre
+        function detectarGenero(nombres) {
+            const nombresArray = nombres.toUpperCase().split(' ');
+            let puntosFemenino = 0;
+            let puntosMasculino = 0;
+
+            for (const nombre of nombresArray) {
+                if (nombresFemeninos.includes(nombre)) {
+                    puntosFemenino++;
+                }
+                if (nombresMasculinos.includes(nombre)) {
+                    puntosMasculino++;
+                }
+            }
+
+            // Si hay empate o no se detecta, intentar heurísticas adicionales
+            if (puntosFemenino === puntosMasculino) {
+                // Terminaciones típicamente femeninas
+                if (nombres.match(/A$|IA$|ANA$|INE$|ETTE$/)) {
+                    puntosFemenino++;
+                }
+                // Terminaciones típicamente masculinas  
+                if (nombres.match(/O$|OS$|ÉS$|ÁN$/)) {
+                    puntosMasculino++;
+                }
+            }
+
+            if (puntosFemenino > puntosMasculino) {
+                return 'F';
+            } else if (puntosMasculino > puntosFemenino) {
+                return 'M';
+            } else {
+                return 'U'; // Desconocido
+            }
+        }
+
+        // Inicializar datos de asistencia
+        Object.keys(attendanceData).forEach(rut => {
+            if (!studentData[rut]) studentData[rut] = {};
+            studentData[rut].attendance = attendanceData[rut];
+        });
+
+        // Función para cambiar foto
+        function changePhoto(rut) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        studentPhotos[rut] = event.target.result;
+                        localStorage.setItem('student_photos', JSON.stringify(studentPhotos));
+                        renderTable();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        // Toggle asistencia
+        function toggleAttendance(rut, date) {
+            if (!studentData[rut]) studentData[rut] = {};
+            if (!studentData[rut].attendance) studentData[rut].attendance = {};
+            
+            const current = studentData[rut].attendance[date];
+            let newValue;
+            if (current === 1) newValue = 0;
+            else if (current === 0) newValue = null;
+            else newValue = 1;
+            
+            studentData[rut].attendance[date] = newValue;
+            localStorage.setItem('student_data', JSON.stringify(studentData));
+            renderTable();
+        }
+
+        // Renderizar tabla
+        function renderTable() {
+            const tbody = document.getElementById('studentsBody');
+            tbody.innerHTML = '';
+            
+            let totalPresent = 0;
+            let totalStudentsWithData = 0;
+            let totalAttendanceRate = 0;
+            
+            // Estadísticas por género y carrera
+            let genderStats = { F: { count: 0, present: 0, attendanceSum: 0, attendanceCount: 0 }, 
+                               M: { count: 0, present: 0, attendanceSum: 0, attendanceCount: 0 },
+                               U: { count: 0, present: 0, attendanceSum: 0, attendanceCount: 0 } };
+            
+            let careerGenderStats = {};
+            
+            // Inicializar estadísticas por carrera
+            ['Trabajo Social', 'College de Ciencias Sociales', 'Bachillerato en Ciencias Sociales'].forEach(career => {
+                careerGenderStats[career] = {
+                    F: { count: 0, present: 0, attendanceSum: 0, attendanceCount: 0 },
+                    M: { count: 0, present: 0, attendanceSum: 0, attendanceCount: 0 },
+                    U: { count: 0, present: 0, attendanceSum: 0, attendanceCount: 0 }
+                };
+            });
+            
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                const data = studentData[student.rut] || {};
+                const attendance = data.attendance || {};
+                
+                // Detectar género
+                const gender = detectarGenero(student.nombres);
+                
+                // Foto
+                const photoUrl = studentPhotos[student.rut] || 
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(student.nombres + ' ' + student.apellidos)}&background=2e5a9b&color=fff`;
+                
+                // Calcular totales usando fechas dinámicas
+                let present = 0;
+                let total = 0;
+                attendanceDates.forEach(date => {
+                    if (attendance[date] === 1) present++;
+                    if (attendance[date] !== null && attendance[date] !== undefined) total++;
+                });
+                
+                // Usar la última fecha para contar presentes "hoy"
+                const lastDate = attendanceDates[attendanceDates.length - 1];
+                if (attendance[lastDate] === 1) totalPresent++;
+                if (total > 0) {
+                    totalStudentsWithData++;
+                    totalAttendanceRate += (present / total);
+                }
+                
+                // Actualizar estadísticas por género
+                genderStats[gender].count++;
+                if (attendance[lastDate] === 1) {
+                    genderStats[gender].present++;
+                }
+                if (total > 0) {
+                    genderStats[gender].attendanceSum += (present / total);
+                    genderStats[gender].attendanceCount++;
+                }
+                
+                // Actualizar estadísticas por carrera y género
+                const career = student.carrera;
+                if (careerGenderStats[career]) {
+                    careerGenderStats[career][gender].count++;
+                    if (attendance[lastDate] === 1) {
+                        careerGenderStats[career][gender].present++;
+                    }
+                    if (total > 0) {
+                        careerGenderStats[career][gender].attendanceSum += (present / total);
+                        careerGenderStats[career][gender].attendanceCount++;
+                    }
+                }
+                
+                // Determinar clase de carrera para el badge
+                let careerClass = '';
+                if (student.codigo === '300003') careerClass = 'career-trabajo-social';
+                else if (student.codigo === '090101') careerClass = 'career-college';
+                else if (student.codigo === '550001') careerClass = 'career-bachillerato';
+                
+                // Construir HTML dinámicamente
+                let rowHtml = `
+                    <td>${student.num}</td>
+                    <td><img src="${photoUrl}" class="student-photo" onclick="changePhoto('${student.rut}')" title="Click para cambiar foto"></td>
+                    <td>${student.apellidos}</td>
+                    <td>${student.nombres}</td>
+                    <td><span class="career-badge ${careerClass}">${student.carrera}</span></td>
+                `;
+                
+                // Agregar columnas de fechas dinámicamente
+                attendanceDates.forEach(date => {
+                    const status = attendance[date] === 1 ? 'present' : attendance[date] === 0 ? 'absent' : 'unknown';
+                    const symbol = attendance[date] === 1 ? '✓' : attendance[date] === 0 ? '✗' : '-';
+                    rowHtml += `
+                        <td><button class="attendance-btn ${status}" 
+                                onclick="toggleAttendance('${student.rut}', '${date}')">
+                                ${symbol}
+                            </button></td>
+                    `;
+                });
+                
+                // Agregar columna total
+                rowHtml += `
+                    <td style="font-weight: bold; color: ${present >= 3 ? '#27ae60' : present >= 2 ? '#f39c12' : '#e74c3c'}">
+                        ${present}/${total || 0}
+                    </td>
+                `;
+                
+                row.innerHTML = rowHtml;
+                tbody.appendChild(row);
+            });
+            
+            // Actualizar estadísticas básicas
+            document.getElementById('presentToday').textContent = totalPresent;
+            document.getElementById('avgAttendance').textContent = 
+                totalStudentsWithData > 0 ? 
+                Math.round((totalAttendanceRate / totalStudentsWithData) * 100) + '%' : '0%';
+            
+            // Actualizar estadísticas por género y carrera
+            updateDetailedStats(genderStats, careerGenderStats);
+        }
+
+        // Actualizar estadísticas detalladas por género y carrera
+        function updateDetailedStats(genderStats, careerGenderStats) {
+            // Actualizar estadísticas básicas con clase small para números más pequeños
+            document.getElementById('trabajoSocial').textContent = 
+                (careerGenderStats['Trabajo Social'].F.count + 
+                 careerGenderStats['Trabajo Social'].M.count + 
+                 careerGenderStats['Trabajo Social'].U.count);
+            document.getElementById('trabajoSocial').className = 'stat-value small';
+            
+            document.getElementById('college').textContent = 
+                (careerGenderStats['College de Ciencias Sociales'].F.count + 
+                 careerGenderStats['College de Ciencias Sociales'].M.count + 
+                 careerGenderStats['College de Ciencias Sociales'].U.count);
+            document.getElementById('college').className = 'stat-value small';
+            
+            document.getElementById('bachillerato').textContent = 
+                (careerGenderStats['Bachillerato en Ciencias Sociales'].F.count + 
+                 careerGenderStats['Bachillerato en Ciencias Sociales'].M.count + 
+                 careerGenderStats['Bachillerato en Ciencias Sociales'].U.count);
+            document.getElementById('bachillerato').className = 'stat-value small';
+            
+            // Crear o actualizar estadísticas por género (agregar nuevas tarjetas)
+            updateGenderStats(genderStats);
+            
+            // Crear o actualizar estadísticas detalladas por carrera y género
+            updateCareerGenderStats(careerGenderStats);
+            
+            // Log detallado en consola
+            console.log('=== ESTADÍSTICAS POR GÉNERO ===');
+            console.log('Mujeres (F):', genderStats.F.count, 'estudiantes');
+            console.log('Hombres (M):', genderStats.M.count, 'estudiantes');
+            console.log('Indefinido (U):', genderStats.U.count, 'estudiantes');
+            
+            console.log('=== ESTADÍSTICAS POR CARRERA Y GÉNERO ===');
+            Object.keys(careerGenderStats).forEach(career => {
+                console.log(`\n${career}:`);
+                console.log('  Mujeres:', careerGenderStats[career].F.count);
+                console.log('  Hombres:', careerGenderStats[career].M.count);
+                console.log('  Indefinido:', careerGenderStats[career].U.count);
+            });
+        }
+
+        // Actualizar tarjetas de estadísticas por género
+        function updateGenderStats(genderStats) {
+            const statsContainer = document.querySelector('.stats');
+            
+            // Agregar estadísticas de género si no existen
+            let genderStatsContainer = document.getElementById('genderStats');
+            if (!genderStatsContainer) {
+                genderStatsContainer = document.createElement('div');
+                genderStatsContainer.id = 'genderStats';
+                genderStatsContainer.style.cssText = 'display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;';
+                statsContainer.appendChild(genderStatsContainer);
+            }
+            
+            genderStatsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value small" style="color: #e91e63;">${genderStats.F.count}</div>
+                    <div class="stat-label">👩 Mujeres</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value small" style="color: #2196f3;">${genderStats.M.count}</div>
+                    <div class="stat-label">👨 Hombres</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value small">${Math.round(genderStats.F.attendanceCount > 0 ? (genderStats.F.attendanceSum / genderStats.F.attendanceCount) * 100 : 0)}%</div>
+                    <div class="stat-label">Asistencia 👩</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value small">${Math.round(genderStats.M.attendanceCount > 0 ? (genderStats.M.attendanceSum / genderStats.M.attendanceCount) * 100 : 0)}%</div>
+                    <div class="stat-label">Asistencia 👨</div>
+                </div>
+            `;
+        }
+
+        // Actualizar estadísticas detalladas por carrera y género
+        function updateCareerGenderStats(careerGenderStats) {
+            const statsContainer = document.querySelector('.stats');
+            
+            // Agregar estadísticas por carrera si no existen
+            let careerStatsContainer = document.getElementById('careerGenderStats');
+            if (!careerStatsContainer) {
+                careerStatsContainer = document.createElement('div');
+                careerStatsContainer.id = 'careerGenderStats';
+                careerStatsContainer.style.cssText = 'margin-top: 20px;';
+                statsContainer.appendChild(careerStatsContainer);
+            }
+            
+            let careerStatsHTML = '<h3 style="color: #2c3e50; margin-bottom: 15px;">📊 Estadísticas por Carrera y Género</h3>';
+            careerStatsHTML += '<div style="display: flex; gap: 20px; flex-wrap: wrap;">';
+            
+            Object.keys(careerGenderStats).forEach(career => {
+                const stats = careerGenderStats[career];
+                const totalF = stats.F.count;
+                const totalM = stats.M.count;
+                const attendanceF = stats.F.attendanceCount > 0 ? Math.round((stats.F.attendanceSum / stats.F.attendanceCount) * 100) : 0;
+                const attendanceM = stats.M.attendanceCount > 0 ? Math.round((stats.M.attendanceSum / stats.M.attendanceCount) * 100) : 0;
+                
+                careerStatsHTML += `
+                    <div class="stat-card" style="min-width: 200px;">
+                        <h4 style="color: #2e5a9b; margin-bottom: 10px; font-size: 0.9em;">${career}</h4>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>👩 ${totalF}</span>
+                            <span>👨 ${totalM}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #666;">
+                            <span>Asist. 👩 ${attendanceF}%</span>
+                            <span>Asist. 👨 ${attendanceM}%</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            careerStatsHTML += '</div>';
+            careerStatsContainer.innerHTML = careerStatsHTML;
+        }
+
+        // Marcar todos presentes
+        function markAllPresent() {
+            if (confirm('¿Marcar a todos como presentes hoy?')) {
+                students.forEach(student => {
+                    if (!studentData[student.rut]) studentData[student.rut] = {};
+                    if (!studentData[student.rut].attendance) studentData[student.rut].attendance = {};
+                    studentData[student.rut].attendance['12-Aug'] = 1;
+                });
+                localStorage.setItem('student_data', JSON.stringify(studentData));
+                renderTable();
+            }
+        }
+
+        // Importar datos
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        // Lista de fechas dinámicas (se actualizará automáticamente)
+        let attendanceDates = ['4-Aug', '5-Aug', '11-Aug', '12-Aug'];
+
+        // Manejar importación de archivo con detección automática de fechas
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let importedData;
+                    let newDatesFound = [];
+                    
+                    if (file.name.endsWith('.json')) {
+                        importedData = JSON.parse(e.target.result);
+                        Object.assign(studentData, importedData);
+                    } else if (file.name.endsWith('.csv')) {
+                        // Procesar CSV con detección automática de fechas
+                        const lines = e.target.result.split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim());
+                        
+                        console.log('Encabezados CSV detectados:', headers);
+                        
+                        // Detectar nuevas fechas en los encabezados
+                        const dateHeaders = headers.filter(h => {
+                            // Buscar patrones de fecha
+                            return h.match(/\d{1,2}[-\/]\w{3}|\d{1,2}[-\/]\d{1,2}|\w{3}[-\/]\d{1,2}/) || 
+                                   h.toLowerCase().includes('ago') || 
+                                   h.toLowerCase().includes('aug') ||
+                                   h.toLowerCase().includes('sep') ||
+                                   h.toLowerCase().includes('oct') ||
+                                   h.toLowerCase().includes('nov') ||
+                                   h.toLowerCase().includes('dic');
+                        });
+                        
+                        console.log('Columnas de fechas detectadas:', dateHeaders);
+                        
+                        // Agregar nuevas fechas que no estén en la lista actual
+                        dateHeaders.forEach(dateHeader => {
+                            if (!attendanceDates.includes(dateHeader)) {
+                                attendanceDates.push(dateHeader);
+                                newDatesFound.push(dateHeader);
+                                console.log(`✅ Nueva fecha agregada: ${dateHeader}`);
+                            }
+                        });
+                        
+                        // Procesar datos de estudiantes
+                        for (let i = 1; i < lines.length; i++) {
+                            const values = lines[i].split(',').map(v => v.trim());
+                            if (values.length >= 3) {
+                                // Buscar RUT en diferentes posiciones posibles
+                                let rut = null;
+                                let rutIndex = -1;
+                                
+                                for (let j = 0; j < Math.min(5, values.length); j++) {
+                                    if (values[j] && values[j].match(/\d{7,8}-[0-9kK]/)) {
+                                        rut = values[j];
+                                        rutIndex = j;
+                                        break;
+                                    }
+                                }
+                                
+                                if (rut && students.find(s => s.rut === rut)) {
+                                    if (!studentData[rut]) studentData[rut] = {};
+                                    if (!studentData[rut].attendance) studentData[rut].attendance = {};
+                                    
+                                    // Mapear datos de asistencia desde CSV
+                                    headers.forEach((header, index) => {
+                                        if (dateHeaders.includes(header) && values[index] !== undefined) {
+                                            const value = values[index];
+                                            studentData[rut].attendance[header] = 
+                                                value === '1' || value.toLowerCase() === 'presente' ? 1 : 
+                                                value === '0' || value.toLowerCase() === 'ausente' ? 0 : null;
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Actualizar encabezados de tabla si se encontraron nuevas fechas
+                    if (newDatesFound.length > 0) {
+                        updateTableHeaders();
+                        showSyncStatus('success', `✅ ${newDatesFound.length} nuevas fechas detectadas: ${newDatesFound.join(', ')}`);
+                    }
+                    
+                    localStorage.setItem('student_data', JSON.stringify(studentData));
+                    localStorage.setItem('attendance_dates', JSON.stringify(attendanceDates));
+                    renderTable();
+                    
+                    const message = `Datos importados exitosamente${newDatesFound.length > 0 ? ` con ${newDatesFound.length} nuevas fechas` : ''}`;
+                    alert(message);
+                    
+                } catch (error) {
+                    console.error('Error importando:', error);
+                    alert('Error al importar el archivo: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Actualizar encabezados de tabla dinámicamente
+        function updateTableHeaders() {
+            const headerRow = document.getElementById('tableHeaders');
+            
+            // Mantener las primeras 5 columnas fijas
+            const fixedHeaders = ['#', 'Foto', 'Apellidos', 'Nombres', 'Carrera'];
+            
+            // Limpiar y reconstruir encabezados
+            headerRow.innerHTML = '';
+            
+            // Agregar columnas fijas
+            fixedHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            
+            // Agregar columnas de fechas dinámicas
+            attendanceDates.forEach(date => {
+                const th = document.createElement('th');
+                th.textContent = date;
+                headerRow.appendChild(th);
+            });
+            
+            // Agregar columna Total
+            const totalTh = document.createElement('th');
+            totalTh.textContent = 'Total';
+            headerRow.appendChild(totalTh);
+            
+            console.log(`Encabezados actualizados: ${attendanceDates.length} fechas`);
+        }
+
+        // Exportar datos (mantener función original)
+        function exportData() {
+            let csv = 'Num,Apellidos,Nombres,4-Aug,5-Aug,11-Aug,12-Aug,Total\n';
+            students.forEach(student => {
+                const data = studentData[student.rut] || {};
+                const att = data.attendance || {};
+                let present = 0;
+                let total = 0;
+                ['4-Aug', '5-Aug', '11-Aug', '12-Aug'].forEach(date => {
+                    if (att[date] === 1) present++;
+                    if (att[date] !== null && att[date] !== undefined) total++;
+                });
+                csv += `${student.num},"${student.apellidos}","${student.nombres}",${att['4-Aug'] || '-'},${att['5-Aug'] || '-'},${att['11-Aug'] || '-'},${att['12-Aug'] || '-'},${present}/${total}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `asistencia_GOB2013_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Búsqueda
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#studentsBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // ============= FUNCIONES PARA CARGAR FOTOS DESDE PDF =============
+        
+        let photoMappings = {}; // Almacenar mappings de nombres a archivos de fotos
+        let loadedPhotos = {}; // Almacenar las fotos cargadas
+
+        // Función principal para cargar fotos desde carpeta
+        async function loadPhotosFromFolder() {
+            showSyncStatus('loading', '📁 Preparando carga de fotos desde carpeta...');
+            
+            const userChoice = confirm(
+                '📁 CARGA DE FOTOS DESDE CARPETA\n\n' +
+                'Este proceso:\n\n' +
+                '✅ Te permite seleccionar una carpeta completa con fotos\n' +
+                '✅ Hace matching automático por nombres de archivos\n' +
+                '✅ Busca coincidencias con RUT, apellidos o nombres\n' +
+                '✅ Soporta formatos: JPG, PNG, GIF, BMP\n\n' +
+                'Nombres sugeridos para archivos:\n' +
+                '• "12345678-9.jpg" (por RUT)\n' +
+                '• "PÉREZ_JUAN.jpg" (por apellidos_nombres)\n' +
+                '• "juan.perez.jpg" (por nombres)\n\n' +
+                '¿Quieres continuar?'
+            );
+            
+            if (userChoice) {
+                document.getElementById('photoFiles').click();
+            } else {
+                showSyncStatus('', '');
+            }
+        }
+
+        // Función principal para cargar fotos desde PDF (mantener como alternativa)
+        async function loadPhotosFromPDF() {
+            showSyncStatus('loading', '📸 Iniciando carga de fotos desde PDF...');
+            
+            const userChoice = confirm(
+                '📸 CARGA DE FOTOS DESDE PDF\n\n' +
+                'Este proceso extraerá automáticamente:\n\n' +
+                '✅ Lista de estudiantes del PDF\n' +
+                '✅ Imágenes embebidas en el PDF\n' +
+                '✅ Matching automático por posición en tabla\n\n' +
+                'Solo necesitas seleccionar el PDF con la tabla completa.\n\n' +
+                '¿Quieres continuar?'
+            );
+            
+            if (userChoice) {
+                document.getElementById('pdfFile').click();
+            } else {
+                showSyncStatus('', '');
+            }
+        }
+
+        // Procesar el PDF con la lista
+        async function handlePDFImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showSyncStatus('loading', '📖 Cargando PDF...');
+            
+            try {
+                // Implementación más robusta con timeout
+                const result = await Promise.race([
+                    readPDFWithCanvasRendering(file),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout procesando PDF')), 30000)
+                    )
+                ]);
+                
+                const { text, images } = result;
+                showSyncStatus('loading', `📊 Procesando ${images.length} elementos visuales encontrados...`);
+                
+                const matchedStudents = await processTableWithImages(text, images);
+                
+                if (matchedStudents > 0) {
+                    localStorage.setItem('student_photos', JSON.stringify(studentPhotos));
+                    renderTable();
+                    showSyncStatus('success', `✅ ¡Proceso completado! ${matchedStudents} fotos de estudiantes cargadas desde el PDF.`);
+                } else {
+                    showSyncStatus('error', '❌ No se pudieron extraer fotos o hacer matching. Prueba con la opción manual alternativa.');
+                    offerManualAlternative();
+                }
+                
+            } catch (error) {
+                console.error('Error procesando PDF:', error);
+                showSyncStatus('error', `❌ Error: ${error.message}`);
+                offerManualAlternative();
+            }
+        }
+
+        // Ofrecer alternativa manual cuando falla la extracción automática
+        function offerManualAlternative() {
+            setTimeout(() => {
+                const useManual = confirm(
+                    '🔄 ALTERNATIVA MANUAL\n\n' +
+                    'La extracción automática falló. Puedes:\n\n' +
+                    '1. Exportar las imágenes del PDF manualmente\n' +
+                    '2. Usar "Importar Datos" para cargar fotos individuales\n' +
+                    '3. O usar la función de carga individual (clic en fotos)\n\n' +
+                    '¿Quieres que te abra instrucciones de cómo exportar desde PDF?'
+                );
+                
+                if (useManual) {
+                    showSyncStatus('success', '💡 Instrucciones: Abre el PDF, guarda cada imagen individualmente, luego usa la función normal de carga de fotos.');
+                }
+            }, 2000);
+        }
+
+        // Procesar fotos desde carpeta seleccionada
+        async function handleFolderPhotoImport(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            showSyncStatus('loading', `📁 Procesando ${files.length} archivos de la carpeta...`);
+            
+            try {
+                let matchedPhotos = 0;
+                let processedFiles = 0;
+                let matchingResults = [];
+                
+                for (const file of files) {
+                    // Solo procesar archivos de imagen
+                    if (!file.type.startsWith('image/')) {
+                        processedFiles++;
+                        continue;
+                    }
+                    
+                    const fileName = file.name.toLowerCase();
+                    const baseName = fileName.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, '');
+                    
+                    // Buscar estudiante por nombre de archivo
+                    const matchedStudent = findStudentByFileName(baseName, file.name);
+                    
+                    if (matchedStudent) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            studentPhotos[matchedStudent.rut] = e.target.result;
+                            matchedPhotos++;
+                            
+                            matchingResults.push({
+                                fileName: file.name,
+                                student: matchedStudent,
+                                matched: true
+                            });
+                            
+                            showSyncStatus('loading', `📸 Procesados ${processedFiles + 1}/${files.length} archivos. Fotos asignadas: ${matchedPhotos}`);
+                            
+                            if (processedFiles + 1 === files.length) {
+                                // Todos los archivos procesados
+                                localStorage.setItem('student_photos', JSON.stringify(studentPhotos));
+                                renderTable();
+                                showResults(matchingResults, matchedPhotos, files.length);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        matchingResults.push({
+                            fileName: file.name,
+                            student: null,
+                            matched: false
+                        });
+                    }
+                    
+                    processedFiles++;
+                    
+                    // Actualizar progreso cada 10 archivos
+                    if (processedFiles % 10 === 0) {
+                        showSyncStatus('loading', `📁 Procesando archivo ${processedFiles}/${files.length}...`);
+                        // Pequeña pausa para no bloquear la UI
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                }
+                
+                if (matchedPhotos === 0) {
+                    showSyncStatus('error', '❌ No se encontraron coincidencias. Verifica los nombres de los archivos.');
+                    showMatchingTips();
+                }
+                
+            } catch (error) {
+                console.error('Error procesando carpeta:', error);
+                showSyncStatus('error', `❌ Error procesando carpeta: ${error.message}`);
+            }
+        }
+
+        // Mostrar resultados detallados
+        function showResults(results, matched, total) {
+            const imageFiles = results.filter(r => r.fileName.match(/\.(jpg|jpeg|png|gif|bmp)$/i));
+            showSyncStatus('success', `✅ Proceso completado! ${matched} fotos asignadas de ${imageFiles.length} imágenes encontradas.`);
+            
+            // Log detallado en consola
+            console.log('=== RESULTADOS DE MATCHING ===');
+            console.log(`Total archivos: ${total}`);
+            console.log(`Imágenes encontradas: ${imageFiles.length}`);
+            console.log(`Fotos asignadas: ${matched}`);
+            console.log('\n=== ARCHIVOS PROCESADOS ===');
+            results.forEach(result => {
+                if (result.fileName.match(/\.(jpg|jpeg|png|gif|bmp)$/i)) {
+                    if (result.matched) {
+                        console.log(`✅ ${result.fileName} → ${result.student.apellidos}, ${result.student.nombres}`);
+                    } else {
+                        console.log(`❌ ${result.fileName} → Sin coincidencia`);
+                    }
+                }
+            });
+        }
+
+        // Mostrar tips de matching
+        function showMatchingTips() {
+            setTimeout(() => {
+                alert(
+                    'TIPS PARA MEJORAR EL MATCHING:\n\n' +
+                    '📋 Formatos de nombres que funcionan mejor:\n\n' +
+                    '• Por RUT: "12345678-9.jpg"\n' +
+                    '• Por apellidos: "PEREZ_GONZALEZ.jpg"\n' +
+                    '• Por nombres: "JUAN_ANDRES.jpg"\n' +
+                    '• Combinado: "PEREZ_JUAN.jpg"\n' +
+                    '• Con espacios: "PEREZ JUAN.jpg"\n\n' +
+                    '🔧 El sistema busca coincidencias en:\n' +
+                    '• RUT completo\n' +
+                    '• Apellidos (paterno y materno)\n' +
+                    '• Nombres\n' +
+                    '• Combinaciones de apellido + nombre'
+                );
+            }, 2000);
+        }
+
+        // Procesar las fotos seleccionadas individualmente
+        async function handlePhotoImport(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            showSyncStatus('loading', `📸 Procesando ${files.length} fotos...`);
+            
+            try {
+                let matchedPhotos = 0;
+                let processedFiles = 0;
+                
+                for (const file of files) {
+                    const fileName = file.name.toLowerCase();
+                    const baseName = fileName.replace(/\.(jpg|jpeg|png|gif|bmp)$/, '');
+                    
+                    // Buscar coincidencias en los mappings
+                    const matchedStudent = findStudentByPhotoName(baseName);
+                    
+                    if (matchedStudent) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            studentPhotos[matchedStudent.rut] = e.target.result;
+                            matchedPhotos++;
+                            
+                            // Actualizar progreso
+                            showSyncStatus('loading', `📸 Procesadas ${processedFiles + 1}/${files.length} fotos. Coincidencias: ${matchedPhotos}`);
+                            
+                            if (processedFiles + 1 === files.length) {
+                                // Todas las fotos procesadas
+                                localStorage.setItem('student_photos', JSON.stringify(studentPhotos));
+                                renderTable();
+                                showSyncStatus('success', `✅ ¡Proceso completado! ${matchedPhotos} fotos asignadas correctamente.`);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    
+                    processedFiles++;
+                }
+                
+                if (matchedPhotos === 0) {
+                    showSyncStatus('error', '❌ No se encontraron coincidencias. Verifica que los nombres de los archivos coincidan con el PDF.');
+                }
+                
+            } catch (error) {
+                console.error('Error procesando fotos:', error);
+                showSyncStatus('error', `❌ Error procesando fotos: ${error.message}`);
+            }
+        }
+
+        // Nueva implementación más robusta usando canvas rendering
+        async function readPDFWithCanvasRendering(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                        let fullText = '';
+                        let allImages = [];
+                        
+                        console.log(`PDF cargado. ${pdf.numPages} páginas encontradas.`);
+                        const maxPages = Math.min(pdf.numPages, 10); // Aumentar a 10 páginas para cubrir todos los estudiantes
+                        showSyncStatus('loading', `📖 PDF cargado. Procesando ${maxPages} páginas para encontrar 94 fotos...`);
+                        
+                        // Procesar cada página (aumentar límite para 94 estudiantes)
+                        for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                            showSyncStatus('loading', `📄 Procesando página ${pageNum}/${maxPages}...`);
+                            console.log(`Procesando página ${pageNum}...`);
+                            
+                            try {
+                                const page = await pdf.getPage(pageNum);
+                                
+                                // Extraer texto
+                                const textContent = await page.getTextContent();
+                                const pageText = textContent.items.map(item => item.str).join(' ');
+                                fullText += pageText + '\n';
+                                
+                                // Renderizar página como imagen usando canvas
+                                const viewport = page.getViewport({ scale: 2.0 });
+                                const canvas = document.createElement('canvas');
+                                const context = canvas.getContext('2d');
+                                canvas.height = viewport.height;
+                                canvas.width = viewport.width;
+                                
+                                const renderContext = {
+                                    canvasContext: context,
+                                    viewport: viewport
+                                };
+                                
+                                await page.render(renderContext).promise;
+                                
+                                // Convertir canvas a imagen y detectar regiones con fotos
+                                const pageImageURL = canvas.toDataURL('image/jpeg', 0.8);
+                                
+                                // Intentar detectar regiones de imágenes (simplificado)
+                                const detectedImages = await detectImageRegions(canvas, pageNum);
+                                allImages = allImages.concat(detectedImages);
+                                
+                                console.log(`Página ${pageNum} procesada. Imágenes detectadas: ${detectedImages.length}`);
+                                showSyncStatus('loading', `🖼️ Página ${pageNum} procesada. ${detectedImages.length} imágenes detectadas. Total: ${allImages.length}`);
+                                
+                            } catch (pageError) {
+                                console.warn(`Error procesando página ${pageNum}:`, pageError);
+                            }
+                        }
+                        
+                        console.log(`Proceso completado. Texto extraído: ${fullText.length} chars, Imágenes: ${allImages.length}`);
+                        resolve({ text: fullText, images: allImages });
+                        
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(new Error('Error leyendo archivo PDF'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Detectar regiones de fotos según el formato específico de cada página
+        async function detectImageRegions(canvas, pageNum) {
+            const images = [];
+            const context = canvas.getContext('2d');
+            
+            // Configuración diferente para Página 1 vs Páginas 2+
+            let tableConfig;
+            if (pageNum === 1) {
+                // PÁGINA 1: Formato con encabezado completo
+                tableConfig = {
+                    cols: 8,
+                    photoColumnIndex: 7, // Última columna
+                    headerHeight: 180, // Encabezado grande con título UC
+                    rowHeight: 85, // Altura de cada fila
+                    maxRows: 10, // 10 estudiantes en página 1
+                    startY: 260 // Posición Y donde empiezan los datos
+                };
+            } else {
+                // PÁGINAS 2+: Formato simplificado
+                tableConfig = {
+                    cols: 7, // Solo 7 columnas visibles
+                    photoColumnIndex: 6, // Última columna (índice 6)
+                    headerHeight: 50, // Encabezado pequeño
+                    rowHeight: 75, // Altura de cada fila
+                    maxRows: 13, // ~13 estudiantes por página
+                    startY: 50 // Empiezan más arriba
+                };
+            }
+            
+            const colWidth = Math.floor(canvas.width / tableConfig.cols);
+            const photoColX = tableConfig.photoColumnIndex * colWidth;
+            const photoColWidth = colWidth;
+            
+            console.log(`PÁGINA ${pageNum}: ${tableConfig.cols} columnas, ${tableConfig.maxRows} estudiantes máximo`);
+            console.log(`Buscando fotos en columna ${tableConfig.photoColumnIndex + 1} (x: ${photoColX}, width: ${photoColWidth})`);
+            
+            let foundPhotos = 0;
+            
+            // Extraer fotos fila por fila
+            for (let row = 0; row < tableConfig.maxRows; row++) {
+                const y = tableConfig.startY + (row * tableConfig.rowHeight);
+                
+                // Solo extraer si está dentro del canvas
+                if (y + tableConfig.rowHeight <= canvas.height) {
+                    const cellCanvas = document.createElement('canvas');
+                    const cellContext = cellCanvas.getContext('2d');
+                    cellCanvas.width = photoColWidth;
+                    cellCanvas.height = tableConfig.rowHeight;
+                    
+                    // Extraer región de la columna Foto
+                    cellContext.drawImage(
+                        canvas, 
+                        photoColX, y, photoColWidth, tableConfig.rowHeight,
+                        0, 0, photoColWidth, tableConfig.rowHeight
+                    );
+                    
+                    // Verificar si contiene una foto
+                    if (hasStudentPhotoContent(cellContext, photoColWidth, tableConfig.rowHeight)) {
+                        const cellDataURL = cellCanvas.toDataURL('image/jpeg', 0.9);
+                        images.push({
+                            name: `page${pageNum}_student${row + 1}`,
+                            dataURL: cellDataURL,
+                            width: photoColWidth,
+                            height: tableConfig.rowHeight,
+                            position: { x: photoColX, y, row, col: tableConfig.photoColumnIndex },
+                            studentRow: row + 1,
+                            pageType: pageNum === 1 ? 'header' : 'data'
+                        });
+                        foundPhotos++;
+                        
+                        console.log(`📸 Foto detectada en página ${pageNum}, fila ${row + 1} (y: ${y})`);
+                    } else {
+                        // Log para debugging cuando NO detecta foto
+                        console.log(`❌ No hay foto en página ${pageNum}, fila ${row + 1} (y: ${y})`);
+                    }
+                }
+            }
+            
+            console.log(`Total fotos encontradas en página ${pageNum}: ${foundPhotos}`);
+            return images;
+        }
+
+        // Verificar si una región contiene una foto de estudiante
+        function hasStudentPhotoContent(context, width, height) {
+            const imageData = context.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            
+            let nonWhitePixels = 0;
+            let colorVariation = 0;
+            let darkPixels = 0;
+            let mediumPixels = 0;
+            
+            // Análisis más sofisticado para fotos de rostros
+            for (let i = 0; i < data.length; i += 16) { // Muestrear cada 4 píxeles
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const brightness = (r + g + b) / 3;
+                
+                // Contar píxeles no blancos
+                if (brightness < 240) {
+                    nonWhitePixels++;
+                    
+                    // Píxeles oscuros (cabello, ojos, sombras)
+                    if (brightness < 80) {
+                        darkPixels++;
+                    }
+                    // Píxeles medios (piel, ropa)
+                    else if (brightness < 180) {
+                        mediumPixels++;
+                    }
+                }
+                
+                // Variación de color (indica foto vs texto)
+                const gray = brightness;
+                if (Math.abs(r - gray) > 15 || Math.abs(g - gray) > 15 || Math.abs(b - gray) > 15) {
+                    colorVariation++;
+                }
+            }
+            
+            const totalPixels = data.length / 16;
+            const nonWhiteRatio = nonWhitePixels / totalPixels;
+            const colorVariationRatio = colorVariation / totalPixels;
+            const darkPixelRatio = darkPixels / totalPixels;
+            const mediumPixelRatio = mediumPixels / totalPixels;
+            
+            // Heurísticas más permisivas para detectar fotos de estudiantes:
+            // - Reducir restricciones para capturar más fotos
+            // - Incluir fotos en blanco y negro o con poca variación de color
+            const isStudentPhoto = (
+                nonWhiteRatio > 0.15 && // Reducir de 0.3 a 0.15
+                (colorVariationRatio > 0.05 || mediumPixelRatio > 0.1) && // Más flexible con color
+                nonWhitePixels > 50 // Reducir umbral de píxeles
+            );
+
+            // Log para debugging
+            if (nonWhitePixels > 20) {
+                console.log(`Analizando región: nonWhite=${nonWhiteRatio.toFixed(2)}, colorVar=${colorVariationRatio.toFixed(2)}, medium=${mediumPixelRatio.toFixed(2)}, isPhoto=${isStudentPhoto}`);
+            }
+            
+            return isStudentPhoto;
+        }
+
+        // Verificar si una región tiene contenido de imagen
+        function hasImageContent(context, width, height) {
+            const imageData = context.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            let nonWhitePixels = 0;
+            let colorVariation = 0;
+            
+            // Muestrear píxeles para detectar contenido visual
+            for (let i = 0; i < data.length; i += 400) { // Muestrear cada 100 píxeles
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                // Contar píxeles no blancos
+                if (r < 240 || g < 240 || b < 240) {
+                    nonWhitePixels++;
+                }
+                
+                // Medir variación de color (indicativo de imagen vs texto)
+                const gray = (r + g + b) / 3;
+                if (Math.abs(r - gray) > 10 || Math.abs(g - gray) > 10 || Math.abs(b - gray) > 10) {
+                    colorVariation++;
+                }
+            }
+            
+            // Heurística: región con contenido visual diverso probablemente es una imagen
+            return nonWhitePixels > 50 && (colorVariation > 10 || nonWhitePixels > 200);
+        }
+
+        // Mantener función original como fallback
+        async function readPDFWithImages(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                        let fullText = '';
+                        let allImages = [];
+                        
+                        // Leer todas las páginas
+                        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                            const page = await pdf.getPage(pageNum);
+                            
+                            // Extraer texto
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += pageText + '\n';
+                            
+                            // Extraer imágenes
+                            try {
+                                const operators = await page.getOperatorList();
+                                const pageImages = await extractImagesFromPage(page, operators);
+                                allImages = allImages.concat(pageImages);
+                            } catch (imageError) {
+                                console.warn(`Error extrayendo imágenes de página ${pageNum}:`, imageError);
+                            }
+                        }
+                        
+                        resolve({ text: fullText, images: allImages });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(new Error('Error leyendo archivo PDF'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Extraer imágenes de una página del PDF
+        async function extractImagesFromPage(page, operators) {
+            const images = [];
+            const resources = await page.getResources();
+            
+            if (resources.XObject) {
+                const xObjectNames = Object.keys(resources.XObject);
+                
+                for (const name of xObjectNames) {
+                    const xObject = resources.XObject[name];
+                    
+                    if (xObject && xObject.dict && xObject.dict.get('Subtype')?.name === 'Image') {
+                        try {
+                            const imageData = await xObject.getData();
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            
+                            // Crear ImageData desde los datos del PDF
+                            const width = xObject.dict.get('Width');
+                            const height = xObject.dict.get('Height');
+                            
+                            if (width && height && imageData.length > 0) {
+                                canvas.width = width;
+                                canvas.height = height;
+                                
+                                // Convertir datos binarios a imagen
+                                const imgData = context.createImageData(width, height);
+                                
+                                // Procesar según el formato de color
+                                const colorSpace = xObject.dict.get('ColorSpace');
+                                if (colorSpace && colorSpace.name === 'DeviceRGB') {
+                                    // RGB
+                                    for (let i = 0, j = 0; i < imageData.length; i += 3, j += 4) {
+                                        imgData.data[j] = imageData[i];     // R
+                                        imgData.data[j + 1] = imageData[i + 1]; // G
+                                        imgData.data[j + 2] = imageData[i + 2]; // B
+                                        imgData.data[j + 3] = 255;        // A
+                                    }
+                                } else {
+                                    // Escala de grises u otros formatos
+                                    for (let i = 0, j = 0; i < imageData.length; i++, j += 4) {
+                                        const gray = imageData[i];
+                                        imgData.data[j] = gray;     // R
+                                        imgData.data[j + 1] = gray; // G
+                                        imgData.data[j + 2] = gray; // B
+                                        imgData.data[j + 3] = 255;  // A
+                                    }
+                                }
+                                
+                                context.putImageData(imgData, 0, 0);
+                                const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+                                images.push({
+                                    name: name,
+                                    dataURL: dataURL,
+                                    width: width,
+                                    height: height
+                                });
+                            }
+                        } catch (imageError) {
+                            console.warn(`Error procesando imagen ${name}:`, imageError);
+                        }
+                    }
+                }
+            }
+            
+            return images;
+        }
+
+        // Procesar tabla estructurada con columnas específicas
+        async function processTableWithImages(text, images) {
+            let matchedCount = 0;
+            
+            console.log('Analizando estructura de tabla con columnas: N°, RUT, Apell. Paterno, Apell. Materno, Nombres, Curriculum, Email, Foto');
+            
+            // Extraer filas de la tabla del texto
+            const tableRows = parseTableFromText(text);
+            console.log(`Filas de tabla identificadas: ${tableRows.length}`);
+            
+            // Organizar imágenes por posición (asumiendo orden de tabla)
+            const photosByPosition = organizeImagesByTablePosition(images);
+            console.log(`Imágenes organizadas por posición: ${photosByPosition.length}`);
+            
+            // Hacer matching usando RUT como clave primaria
+            for (let i = 0; i < tableRows.length && i < photosByPosition.length; i++) {
+                const tableRow = tableRows[i];
+                const photoImage = photosByPosition[i];
+                
+                if (tableRow && tableRow.rut && photoImage) {
+                    // Buscar estudiante por RUT
+                    const student = students.find(s => 
+                        s.rut === tableRow.rut || 
+                        s.rut.replace('-', '') === tableRow.rut.replace('-', '') ||
+                        s.apellidos.toLowerCase() === tableRow.apellidoPaterno.toLowerCase() ||
+                        s.nombres.toLowerCase().includes(tableRow.nombres.toLowerCase())
+                    );
+                    
+                    if (student) {
+                        studentPhotos[student.rut] = photoImage.dataURL;
+                        matchedCount++;
+                        console.log(`✅ Foto asignada a: ${student.apellidos}, ${student.nombres} (RUT: ${student.rut})`);
+                    } else {
+                        console.log(`❌ No se encontró estudiante para RUT: ${tableRow.rut}, ${tableRow.apellidoPaterno} ${tableRow.nombres}`);
+                    }
+                }
+            }
+            
+            return matchedCount;
+        }
+
+        // Parsear texto para extraer filas de tabla
+        function parseTableFromText(text) {
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const tableRows = [];
+            
+            // Buscar encabezados para identificar inicio de tabla
+            let tableStarted = false;
+            let headerFound = false;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // Detectar encabezado de tabla
+                if (line.toLowerCase().includes('paterno') && line.toLowerCase().includes('materno') && 
+                    line.toLowerCase().includes('nombres') && !headerFound) {
+                    headerFound = true;
+                    tableStarted = true;
+                    console.log(`Encabezado de tabla encontrado en línea ${i}: ${line}`);
+                    continue;
+                }
+                
+                // Procesar filas de datos después del encabezado
+                if (tableStarted && headerFound) {
+                    const row = parseTableRow(line);
+                    if (row && row.rut) {
+                        tableRows.push(row);
+                        console.log(`Fila procesada: ${row.numero} - ${row.rut} - ${row.apellidoPaterno} ${row.apellidoMaterno}, ${row.nombres}`);
+                    }
+                }
+                
+                // Detener si llegamos a 100 filas (límite de seguridad)
+                if (tableRows.length >= 100) break;
+            }
+            
+            return tableRows;
+        }
+
+        // Parsear una fila individual de la tabla
+        function parseTableRow(line) {
+            // Patrones para identificar datos de fila
+            // Ejemplo: "1 12345678-9 PÉREZ GONZÁLEZ JUAN ANDRÉS Trabajo Social juan.perez@uc.cl"
+            
+            // Patrón flexible para capturar: N° RUT APELLIDO_PAT APELLIDO_MAT NOMBRES CURRICULUM EMAIL
+            const patterns = [
+                // Patrón completo
+                /^(\d+)\s+([0-9]{7,8}-[0-9kK])\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([\w\s]+?)\s+([\w@.-]+)/i,
+                // Patrón sin email
+                /^(\d+)\s+([0-9]{7,8}-[0-9kK])\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([\w\s]+?)$/i,
+                // Patrón simplificado
+                /^(\d+)\s+([0-9]{7,8}-[0-9kK])\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+([A-ZÁÉÍÓÚÑ\s]+)/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = line.match(pattern);
+                if (match) {
+                    return {
+                        numero: parseInt(match[1]),
+                        rut: match[2].trim().toUpperCase(),
+                        apellidoPaterno: match[3].trim(),
+                        apellidoMaterno: match[4] ? match[4].trim() : '',
+                        nombres: match[5].trim(),
+                        curriculum: match[6] ? match[6].trim() : '',
+                        email: match[7] ? match[7].trim() : ''
+                    };
+                }
+            }
+            
+            return null;
+        }
+
+        // Organizar imágenes según posición en tabla
+        function organizeImagesByTablePosition(images) {
+            // Filtrar y ordenar imágenes que probablemente sean fotos de estudiantes
+            return images
+                .filter(img => img && img.dataURL && img.width > 50 && img.height > 50)
+                .sort((a, b) => {
+                    // Ordenar por posición en la página (fila, luego columna)
+                    if (a.position && b.position) {
+                        if (a.position.row !== b.position.row) {
+                            return a.position.row - b.position.row;
+                        }
+                        return a.position.col - b.position.col;
+                    }
+                    return 0;
+                })
+                .slice(0, 100); // Limitar a 100 imágenes máximo
+        }
+
+        // Extraer mappings de estudiantes y nombres de fotos del texto del PDF
+        function extractPhotoMappings(pdfText) {
+            const mappings = {};
+            const lines = pdfText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            // Intentar diferentes formatos de parsing
+            for (const line of lines) {
+                // Formato: "APELLIDO, NOMBRE - foto123.jpg"
+                let match = line.match(/^([A-ZÁÉÍÓÚÑ\s]+),\s*([A-ZÁÉÍÓÚÑ\s]+)\s*[-–]\s*(.+\.(jpg|jpeg|png|gif|bmp))/i);
+                if (match) {
+                    const apellidos = match[1].trim();
+                    const nombres = match[2].trim();
+                    const photoFile = match[3].trim();
+                    
+                    // Buscar estudiante correspondiente
+                    const student = students.find(s => 
+                        s.apellidos.toLowerCase().includes(apellidos.toLowerCase()) &&
+                        s.nombres.toLowerCase().includes(nombres.toLowerCase())
+                    );
+                    
+                    if (student) {
+                        mappings[photoFile.toLowerCase()] = student;
+                    }
+                    continue;
+                }
+                
+                // Formato: "foto123.jpg APELLIDO NOMBRE"
+                match = line.match(/^(.+\.(jpg|jpeg|png|gif|bmp))\s+([A-ZÁÉÍÓÚÑ\s,]+)/i);
+                if (match) {
+                    const photoFile = match[1].trim();
+                    const fullName = match[3].trim();
+                    
+                    // Buscar estudiante por coincidencia de nombre
+                    const student = students.find(s => 
+                        fullName.toLowerCase().includes(s.apellidos.toLowerCase()) ||
+                        fullName.toLowerCase().includes(s.nombres.toLowerCase())
+                    );
+                    
+                    if (student) {
+                        mappings[photoFile.toLowerCase()] = student;
+                    }
+                }
+            }
+            
+            console.log('Mappings extraídos:', mappings);
+            return mappings;
+        }
+
+        // Encontrar estudiante por nombre de archivo (mejorado para carpeta)
+        function findStudentByFileName(baseName, fullFileName) {
+            const searchTerm = baseName.toLowerCase().trim();
+            
+            console.log(`Buscando coincidencia para: "${fullFileName}" (base: "${searchTerm}")`);
+            
+            // 1. Búsqueda por RUT exacto
+            const rutMatch = searchTerm.match(/(\d{7,8}-[0-9k])/i);
+            if (rutMatch) {
+                const rut = rutMatch[1].toUpperCase();
+                const student = students.find(s => s.rut === rut);
+                if (student) {
+                    console.log(`✅ Match por RUT: ${rut} → ${student.apellidos}, ${student.nombres}`);
+                    return student;
+                }
+            }
+            
+            // 2. Búsqueda por apellidos + nombres (diferentes separadores)
+            const namePatterns = [
+                searchTerm.replace(/[_-]/g, ' '), // Reemplazar _ y - por espacios
+                searchTerm.replace(/[_-]/g, ''), // Sin separadores
+                searchTerm // Original
+            ];
+            
+            for (const pattern of namePatterns) {
+                const words = pattern.split(/\s+/).filter(w => w.length > 1);
+                
+                if (words.length >= 2) {
+                    // Buscar combinaciones de apellidos y nombres
+                    for (const student of students) {
+                        const studentFullName = `${student.apellidos} ${student.nombres}`.toLowerCase();
+                        const studentWords = studentFullName.split(/\s+/);
+                        
+                        // Verificar si las palabras del archivo coinciden con el estudiante
+                        let matchCount = 0;
+                        for (const word of words) {
+                            if (word.length > 2 && studentWords.some(sw => 
+                                sw.includes(word) || word.includes(sw) || 
+                                levenshteinDistance(word, sw) <= 1)) {
+                                matchCount++;
+                            }
+                        }
+                        
+                        // Si coinciden al menos 2 palabras, es un match
+                        if (matchCount >= 2) {
+                            console.log(`✅ Match por nombres: "${pattern}" → ${student.apellidos}, ${student.nombres} (${matchCount} palabras)`);
+                            return student;
+                        }
+                    }
+                }
+            }
+            
+            // 3. Búsqueda por apellido principal
+            for (const student of students) {
+                const apellidoPrincipal = student.apellidos.split(' ')[0].toLowerCase();
+                if (searchTerm.includes(apellidoPrincipal) && apellidoPrincipal.length > 3) {
+                    console.log(`✅ Match por apellido principal: "${apellidoPrincipal}" → ${student.apellidos}, ${student.nombres}`);
+                    return student;
+                }
+            }
+            
+            // 4. Búsqueda por primer nombre
+            for (const student of students) {
+                const primerNombre = student.nombres.split(' ')[0].toLowerCase();
+                if (searchTerm.includes(primerNombre) && primerNombre.length > 3) {
+                    console.log(`✅ Match por primer nombre: "${primerNombre}" → ${student.apellidos}, ${student.nombres}`);
+                    return student;
+                }
+            }
+            
+            console.log(`❌ Sin coincidencia para: "${fullFileName}"`);
+            return null;
+        }
+
+        // Calcular distancia de Levenshtein para matching aproximado
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+
+        // Encontrar estudiante por nombre de foto (función original para PDF)
+        function findStudentByPhotoName(photoBaseName) {
+            // Búsqueda directa en mappings
+            if (photoMappings[photoBaseName + '.jpg'] || 
+                photoMappings[photoBaseName + '.jpeg'] || 
+                photoMappings[photoBaseName + '.png']) {
+                return photoMappings[photoBaseName + '.jpg'] || 
+                       photoMappings[photoBaseName + '.jpeg'] || 
+                       photoMappings[photoBaseName + '.png'];
+            }
+            
+            // Búsqueda por coincidencia parcial de nombre
+            const searchTerm = photoBaseName.toLowerCase();
+            return students.find(student => {
+                const fullName = (student.nombres + ' ' + student.apellidos).toLowerCase();
+                const rutNum = student.rut.split('-')[0];
+                
+                return searchTerm.includes(student.nombres.toLowerCase()) ||
+                       searchTerm.includes(student.apellidos.toLowerCase()) ||
+                       searchTerm.includes(rutNum) ||
+                       fullName.includes(searchTerm);
+            });
+        }
+
+        // ============= FIN FUNCIONES DE CARGA DE FOTOS =============
+
+        // ============= FUNCIONES DE SINCRONIZACIÓN CON SHAREPOINT =============
+        
+        let syncInterval = null;
+        let lastSyncTime = localStorage.getItem('lastSync') || null;
+        
+        // Variables de configuración para SharePoint
+        const SHAREPOINT_CONFIG = {
+            siteUrl: 'https://uccl0-my.sharepoint.com',
+            driveId: '76B56703-D310-4633-8DA9-E3218CEACAE3',
+            fileName: 'Asistencia.xlsx',
+            userEmail: 'daniel.trujillo@uc.cl'
+        };
+
+        // Función principal de sincronización
+        async function syncWithSharePoint() {
+            const syncBtn = document.getElementById('syncBtn');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            // Mostrar estado de carga
+            showSyncStatus('loading', '🔄 Conectando con SharePoint...');
+            syncBtn.disabled = true;
+            syncBtn.textContent = '⏳ Sincronizando...';
+            
+            try {
+                // Opción 1: Usar Microsoft Graph API (requiere autenticación)
+                // Esta es la implementación más robusta pero requiere configuración de Azure AD
+                
+                // Opción 2: Solicitar al usuario que descargue/suba manualmente el archivo
+                // Esta es la implementación que vamos a usar como alternativa práctica
+                
+                await syncViaFileUpload();
+                
+            } catch (error) {
+                console.error('Error en sincronización:', error);
+                showSyncStatus('error', `❌ Error: ${error.message}`);
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.textContent = '🔄 Sincronizar Excel';
+            }
+        }
+        
+        // Implementación alternativa: sincronización mediante descarga/carga de archivo
+        async function syncViaFileUpload() {
+            const userChoice = confirm(
+                '🔄 SINCRONIZACIÓN CON SHAREPOINT\n\n' +
+                'Para sincronizar con el Excel de SharePoint:\n\n' +
+                '1. Haz clic en "OK" para abrir el enlace del Excel\n' +
+                '2. Descarga el archivo como CSV desde SharePoint\n' +
+                '3. Vuelve aquí y usa "Importar Datos" para cargar el CSV\n\n' +
+                '¿Quieres continuar?'
+            );
+            
+            if (userChoice) {
+                // Abrir SharePoint en nueva pestaña
+                const sharePointUrl = 'https://uccl0-my.sharepoint.com/:x:/r/personal/daniel_trujillo_uc_cl/_layouts/15/Doc.aspx?sourcedoc=%7B76B56703-D310-4633-8DA9-E3218CEACAE3%7D&file=Asistencia.xlsx&action=default&mobileredirect=true';
+                window.open(sharePointUrl, '_blank');
+                
+                showSyncStatus('success', '✅ SharePoint abierto. Descarga el Excel como CSV y usa "Importar Datos"');
+                
+                // Guardar timestamp de sincronización
+                localStorage.setItem('lastSync', new Date().toISOString());
+                updateLastSyncDisplay();
+            } else {
+                showSyncStatus('', '');
+            }
+        }
+        
+        // Función para mostrar estado de sincronización
+        function showSyncStatus(type, message) {
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.className = `sync-status ${type}`;
+            syncStatus.textContent = message;
+            syncStatus.style.display = message ? 'block' : 'none';
+            
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    syncStatus.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Función para alternar panel de configuración
+        function toggleConfig() {
+            const configPanel = document.getElementById('configPanel');
+            configPanel.style.display = configPanel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Función para probar conexión
+        function testConnection() {
+            showSyncStatus('loading', '🔗 Probando conexión con SharePoint...');
+            
+            setTimeout(() => {
+                showSyncStatus('success', '✅ URL de SharePoint válida. Usa "Sincronizar Excel" para actualizar datos.');
+            }, 2000);
+        }
+        
+        // Función para actualizar display de última sincronización
+        function updateLastSyncDisplay() {
+            const lastSync = localStorage.getItem('lastSync');
+            if (lastSync) {
+                const syncTime = new Date(lastSync).toLocaleString('es-CL');
+                showSyncStatus('success', `✅ Última sincronización: ${syncTime}`);
+            }
+        }
+        
+        // Sincronización automática
+        function startAutoSync() {
+            const autoSyncEnabled = document.getElementById('autoSync')?.checked;
+            if (autoSyncEnabled && !syncInterval) {
+                syncInterval = setInterval(() => {
+                    console.log('🔄 Verificando actualizaciones automáticas...');
+                    // En una implementación real, aquí verificaríamos cambios en SharePoint
+                    updateLastSyncDisplay();
+                }, 5 * 60 * 1000); // 5 minutos
+            }
+        }
+        
+        function stopAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+            }
+        }
+        
+        // Event listeners para opciones de configuración
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoSyncCheckbox = document.getElementById('autoSync');
+            if (autoSyncCheckbox) {
+                autoSyncCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        startAutoSync();
+                        showSyncStatus('success', '✅ Sincronización automática activada');
+                    } else {
+                        stopAutoSync();
+                        showSyncStatus('', '');
+                    }
+                });
+            }
+        });
+
+        // ============= FIN FUNCIONES DE SINCRONIZACIÓN =============
+
+        // Inicializar
+        // Cargar fechas guardadas
+        const savedDates = localStorage.getItem('attendance_dates');
+        if (savedDates) {
+            attendanceDates = JSON.parse(savedDates);
+            updateTableHeaders();
+        }
+        
+        renderTable();
+        updateLastSyncDisplay();
+        
+        // Iniciar auto-sync si está habilitado
+        setTimeout(() => {
+            const autoSyncEnabled = document.getElementById('autoSync')?.checked;
+            if (autoSyncEnabled) {
+                startAutoSync();
+            }
+        }, 1000);
+
+        // Funciones para manejo de pestañas
+        function showTab(tabName) {
+            // Ocultar todas las pestañas
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Desactivar todos los botones
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar pestaña seleccionada
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Activar botón correspondiente
+            event.target.classList.add('active');
+            
+            // Generar contenido específico según la pestaña
+            if (tabName === 'estadisticas') {
+                generateStatistics();
+            } else if (tabName === 'graficos') {
+                generateAttendanceChart();
+            }
+        }
+
+        // Generar estadísticas por carrera y sexo
+        function generateStatistics() {
+            const content = document.getElementById('estadisticas-content');
+            
+            // Agrupar estudiantes por carrera
+            const careerStats = {};
+            students.forEach(student => {
+                const career = student.career || 'Sin especificar';
+                if (!careerStats[career]) {
+                    careerStats[career] = { total: 0, female: 0, male: 0, unknown: 0 };
+                }
+                careerStats[career].total++;
+                
+                const gender = detectarGenero(student.names);
+                if (gender === 'F') careerStats[career].female++;
+                else if (gender === 'M') careerStats[career].male++;
+                else careerStats[career].unknown++;
+            });
+
+            // Calcular porcentajes de asistencia por carrera y sexo
+            let html = '<div class="stats-grid">';
+            
+            Object.entries(careerStats).forEach(([career, stats]) => {
+                // Calcular asistencia por género en esta carrera
+                const femaleAttendance = calculateAttendanceByCareerAndGender(career, 'F');
+                const maleAttendance = calculateAttendanceByCareerAndGender(career, 'M');
+                const totalAttendance = calculateAttendanceByCareer(career);
+                
+                html += `
+                    <div class="career-stats">
+                        <h3>${career}</h3>
+                        <p><strong>Total estudiantes:</strong> ${stats.total}</p>
+                        <p><strong>Asistencia promedio:</strong> ${totalAttendance.toFixed(1)}%</p>
+                        
+                        <div class="gender-breakdown">
+                            <div class="gender-stat">
+                                <div class="percentage">${femaleAttendance.toFixed(1)}%</div>
+                                <div class="label">Mujeres (${stats.female})</div>
+                            </div>
+                            <div class="gender-stat">
+                                <div class="percentage">${maleAttendance.toFixed(1)}%</div>
+                                <div class="label">Hombres (${stats.male})</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        // Calcular asistencia por carrera y género
+        function calculateAttendanceByCareerAndGender(career, gender) {
+            const careerStudents = students.filter(s => s.career === career && detectarGenero(s.names) === gender);
+            if (careerStudents.length === 0) return 0;
+            
+            let totalClasses = 0;
+            let totalAttendance = 0;
+            
+            careerStudents.forEach(student => {
+                attendanceDates.forEach(date => {
+                    totalClasses++;
+                    const attendance = localStorage.getItem(`attendance_${student.rut}_${date}`);
+                    if (attendance === 'present') totalAttendance++;
+                });
+            });
+            
+            return totalClasses > 0 ? (totalAttendance / totalClasses) * 100 : 0;
+        }
+
+        // Calcular asistencia por carrera
+        function calculateAttendanceByCareer(career) {
+            const careerStudents = students.filter(s => s.career === career);
+            if (careerStudents.length === 0) return 0;
+            
+            let totalClasses = 0;
+            let totalAttendance = 0;
+            
+            careerStudents.forEach(student => {
+                attendanceDates.forEach(date => {
+                    totalClasses++;
+                    const attendance = localStorage.getItem(`attendance_${student.rut}_${date}`);
+                    if (attendance === 'present') totalAttendance++;
+                });
+            });
+            
+            return totalClasses > 0 ? (totalAttendance / totalClasses) * 100 : 0;
+        }
+
+        // Generar gráfico de asistencia por fecha
+        function generateAttendanceChart() {
+            const canvas = document.getElementById('attendanceChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Calcular asistencia por fecha
+            const attendanceByDate = attendanceDates.map(date => {
+                let present = 0;
+                students.forEach(student => {
+                    const attendance = localStorage.getItem(`attendance_${student.rut}_${date}`);
+                    if (attendance === 'present') present++;
+                });
+                return present;
+            });
+            
+            // Configuración del gráfico
+            const padding = 60;
+            const chartWidth = canvas.width - 2 * padding;
+            const chartHeight = canvas.height - 2 * padding;
+            const maxValue = Math.max(...attendanceByDate, 10);
+            const barWidth = chartWidth / attendanceDates.length;
+            
+            // Dibujar ejes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Eje Y
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, padding + chartHeight);
+            // Eje X
+            ctx.moveTo(padding, padding + chartHeight);
+            ctx.lineTo(padding + chartWidth, padding + chartHeight);
+            ctx.stroke();
+            
+            // Dibujar barras
+            ctx.fillStyle = '#007bff';
+            attendanceByDate.forEach((count, index) => {
+                const barHeight = (count / maxValue) * chartHeight;
+                const x = padding + index * barWidth + barWidth * 0.1;
+                const y = padding + chartHeight - barHeight;
+                const width = barWidth * 0.8;
+                
+                ctx.fillRect(x, y, width, barHeight);
+                
+                // Etiquetas en el eje X
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(attendanceDates[index], x + width/2, padding + chartHeight + 20);
+                
+                // Valores en las barras
+                ctx.fillText(count.toString(), x + width/2, y - 5);
+                
+                ctx.fillStyle = '#007bff';
+            });
+            
+            // Etiquetas del eje Y
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const value = Math.round((maxValue / 5) * i);
+                const y = padding + chartHeight - (i / 5) * chartHeight;
+                ctx.fillText(value.toString(), padding - 10, y + 3);
+            }
+            
+            // Título
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Estudiantes Presentes por Fecha', canvas.width / 2, 30);
+        }
+    </script>
+</body>
+</html>

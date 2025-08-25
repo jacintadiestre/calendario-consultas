@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reserva - Profesora Jacinta Diestre</title>
+    
+    <!-- EmailJS para envío de correos reales -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header h2 {
+            font-size: 1.3em;
+            font-weight: 400;
+            opacity: 0.95;
+        }
+
+        .location-banner {
+            background: #e8f2ff;
+            color: #004494;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #0056b3;
+        }
+
+        .location-details {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .location-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .test-mode-banner {
+            background: #f0f4f8;
+            border-bottom: 1px solid #d1d9e6;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .test-btn {
+            padding: 8px 15px;
+            background: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .test-btn:hover {
+            background: #004494;
+            transform: translateY(-1px);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .slots-section {
+            padding-right: 20px;
+        }
+
+        .form-section {
+            padding-left: 20px;
+            border-left: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            color: #004494;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .time-slots-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .time-slots-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .time-slots-container::-webkit-scrollbar-track {
+            background: #f0f4f8;
+            border-radius: 10px;
+        }
+
+        .time-slots-container::-webkit-scrollbar-thumb {
+            background: #0056b3;
+            border-radius: 10px;
+        }
+
+        .time-slot {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .time-slot:hover:not(.occupied):not(.selected) {
+            border-color: #0056b3;
+            background: #f8fbff;
+            transform: translateX(3px);
+        }
+
+        .time-slot.occupied {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .time-slot.selected {
+            background: #0056b3;
+            color: white;
+            border-color: #004494;
+        }
+
+        .slot-time {
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .slot-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .slot-status.available {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .slot-status.occupied-status {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .slot-status.selected-status {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .slot-capacity {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 0.75em;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .group-toggle {
+            background: #f8fbff;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .group-toggle h3 {
+            color: #004494;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #d1d9e6;
+            background: white;
+            color: #004494;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: #0056b3;
+            color: white;
+            border-color: #0056b3;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: #f0f4f8;
+        }
+
+        .group-members {
+            display: none;
+        }
+
+        .group-members.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d9e6;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .selected-time-display {
+            background: #e8f2ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0056b3;
+            display: none;
+        }
+
+        .selected-time-display.show {
+            display: block;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #004494;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+        }
+
+        .btn:disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            display: none;
+            padding: 20px;
+            background: #e8f5e9;
+            color: #1b5e20;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #4caf50;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message strong {
+            color: #1b5e20;
+        }
+
+        .reservations-list {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fbff;
+            border-radius: 8px;
+            border: 1px solid #d1d9e6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .reservations-list h3 {
+            color: #004494;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .reservation-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border-left: 3px solid #0056b3;
+            border-radius: 5px;
+        }
+
+        .reservation-item.group {
+            border-left-color: #7c3aed;
+        }
+
+        .group-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #7c3aed;
+            color: white;
+            border-radius: 10px;
+            font-size: 0.75em;
+            margin-left: 10px;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #0056b3;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            animation: pulseDot 1.5s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .form-section {
+                padding-left: 0;
+                padding-top: 30px;
+                border-left: none;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .header h2 {
+                font-size: 1.1em;
+            }
+
+            .location-details {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .test-mode-banner {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        .map-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: white;
+            color: #0056b3;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid #0056b3;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .map-link:hover {
+            background: #0056b3;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Modal para foto */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .photo-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-content {
+            max-width: 90%;
+            max-height: 90vh;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 30px;
+            color: #666;
+            cursor: pointer;
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            background: #f0f0f0;
+        }
+
+        .building-photo {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .photo-caption {
+            margin-top: 15px;
+            color: #004494;
+            font-weight: 500;
+        }
+
+        /* Estilos para modal de administrador */
+        .admin-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .admin-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .admin-content {
+            max-width: 95%;
+            max-height: 90vh;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 15px;
+        }
+
+        .close-admin {
+            font-size: 30px;
+            color: #666;
+            cursor: pointer;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-admin:hover {
+            background: #f0f0f0;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .admin-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #004494;
+        }
+
+        .admin-table tr:hover {
+            background: #f8fbff;
+        }
+
+        .no-reservations {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reserva Horario de Consultas</h1>
+            <h2>Profesora Jacinta Diestre</h2>
+        </div>
+
+        <!-- Panel de administración oculto - Solo accesible con contraseña -->
+        <div class="test-mode-banner" id="adminPanel" style="display: none;">
+            <span>🔐 Panel de Administración - Profesora Diestre</span>
+            <div class="test-controls">
+                <button class="test-btn" onclick="toggleAdminView()">👁️ Ver Todas las Reservas</button>
+                <button class="test-btn" onclick="exportReservations()">📥 Exportar Lista</button>
+                <button class="test-btn" onclick="clearAllReservations()">🗑️ Limpiar Todo</button>
+                <button class="test-btn" onclick="testEmail()">📧 Probar Email</button>
+                <button class="test-btn" onclick="hideAdminPanel()">❌ Ocultar Panel</button>
+            </div>
+        </div>
+
+        <div class="location-banner">
+            <div class="location-details">
+                <div class="location-item">
+                    <span>📍</span>
+                    <strong>Nuevo Edificio Interdisciplinario (N°30) - 4to Piso</strong>
+                </div>
+                <div class="location-item">
+                    <span>📅</span>
+                    <strong>Mañana - Martes</strong>
+                </div>
+                <div class="location-item">
+                    <span>⏰</span>
+                    <strong>8:20 - 10:40 AM</strong>
+                </div>
+            </div>
+            <a href="https://uccl0.sharepoint.com/sites/uc365_Gestin_de_documentos/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2Fuc365%5FGestin%5Fde%5Fdocumentos%2FShared%20Documents%2FCampus%2FMAPAS%2FCAMPUS%2DSAN%2DJOAQU%C3%8DN%2Epdf&parent=%2Fsites%2Fuc365%5FGestin%5Fde%5Fdocumentos%2FShared%20Documents%2FCampus%2FMAPAS&p=true&ga=1" 
+               class="map-link" 
+               target="_blank">
+                🗺️ Ver mapa del campus (Edificio 30)
+            </a>
+            <button class="map-link" onclick="showBuildingPhoto()" style="margin-left: 10px;">
+                📸 Ver foto del edificio
+            </button>
+        </div>
+
+        <div class="content" id="mainContent">
+            <div class="slots-section">
+                <h2 class="section-title">Horarios Disponibles</h2>
+
+                <div class="time-slots-container" id="timeSlots">
+                    <!-- Time slots will be generated here -->
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Formulario de Reserva</h2>
+                
+                <div class="selected-time-display" id="selectedTimeDisplay">
+                    <strong>Horario seleccionado:</strong> <span id="selectedTimeText"></span>
+                    <br>
+                    <strong>Lugar:</strong> 4to Piso, Nuevo Edificio Interdisciplinario (N°30)
+                </div>
+
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label for="studentName">Nombre completo *</label>
+                        <input type="text" id="studentName" required placeholder="Tu nombre completo">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentEmail">Correo electrónico *</label>
+                        <input type="email" id="studentEmail" required placeholder="tu.correo@universidad.edu">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="topic">¿Cuál es tu pregunta o tema específico? *</label>
+                        <textarea id="topic" rows="4" required placeholder="Describe claramente tu pregunta o el tema que necesitas consultar"></textarea>
+                    </div>
+
+                    <div class="form-group" style="background: #f8fbff; padding: 15px; border-radius: 8px; border: 1px solid #d1d9e6;">
+                        <label style="color: #004494; font-weight: 600; margin-bottom: 10px; display: block;">
+                            ¿Vienes acompañado/a?
+                        </label>
+                        <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; font-weight: normal; cursor: pointer;">
+                                <input type="radio" name="accompanied" value="no" checked style="margin-right: 8px;" onchange="toggleCompanion()">
+                                No, vengo solo/a
+                            </label>
+                            <label style="display: flex; align-items: center; font-weight: normal; cursor: pointer;">
+                                <input type="radio" name="accompanied" value="yes" style="margin-right: 8px;" onchange="toggleCompanion()">
+                                Sí, vengo con alguien
+                            </label>
+                        </div>
+                        <div id="companionInfo" style="display: none; margin-top: 10px;">
+                            <input type="text" id="companionName" placeholder="Nombre de quien te acompaña" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #d1d9e6; border-radius: 6px;">
+                            <small style="color: #6b7280; display: block; margin-top: 5px;">
+                                Nota: Solo se permite un acompañante por reserva
+                            </small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn" disabled>
+                        Confirmar Reserva
+                    </button>
+                </form>
+
+                <div class="success-message" id="successMessage">
+                    <strong>📋 Solicitud de reserva enviada</strong>
+                    <br><br>
+                    <div id="successDetails"></div>
+                    <br>
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                        <strong>⏳ Estado: Pendiente de confirmación</strong><br><br>
+                        Tu solicitud ha sido registrada. La profesora Jacinta Diestre revisará tu solicitud y te enviará un correo electrónico de confirmación dentro de las próximas horas.
+                        <br><br>
+                        <small style="color: #856404;">💡 Revisa tu bandeja de entrada y spam. Si no recibes respuesta en 24 horas, puedes contactar directamente a la profesora.</small>
+                    </div>
+                </div>
+
+                <div class="reservations-list" id="publicReservationsList">
+                    <h3>Estado de Horarios</h3>
+                    <div id="recentReservations">
+                        <p style="color: #6b7280;">No hay horarios reservados aún</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para foto del edificio -->
+    <div id="photoModal" class="photo-modal">
+        <div class="photo-content">
+            <span class="close-modal" onclick="closePhotoModal()">&times;</span>
+            <div style="text-align: center;">
+                <h3 style="color: #004494; margin-bottom: 15px;">📸 Nuevo Edificio Interdisciplinario - UC</h3>
+                <img src="fotos/1_Nor_poniente_resultado.jpg" 
+                     alt="Nuevo Edificio Interdisciplinario UC" 
+                     class="building-photo"
+                     style="max-width: 70%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                <div style="margin-top: 15px; padding: 15px; background: #f8fbff; border-radius: 8px; border-left: 4px solid #0056b3;">
+                    <p style="color: #004494; font-weight: 600; margin-bottom: 8px;">
+                        📍 Ubicación: Nuevo Edificio Interdisciplinario (N°30)
+                    </p>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 5px;">
+                        🏢 4to Piso - Oficinas académicas
+                    </p>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 5px;">
+                        ⏰ Horarios de consulta: Martes 8:20 - 10:40 AM
+                    </p>
+                    <p style="color: #666; font-size: 14px;">
+                        🚌 Acceso: Metro San Joaquín (Línea 5)
+                    </p>
+                </div>
+            </div>
+            <p class="photo-caption" style="margin-top: 15px;">Vista del Nuevo Edificio Interdisciplinario</p>
+        </div>
+    </div>
+
+    <!-- Modal para vista de administrador -->
+    <div id="adminModal" class="admin-modal">
+        <div class="admin-content">
+            <div class="admin-header">
+                <h2 style="color: #004494;">📋 Todas las Reservas - Consultas Mañana</h2>
+                <button class="close-admin" onclick="closeAdminView()">&times;</button>
+            </div>
+            <div id="adminReservationsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Admin access with keyboard shortcut (solo para profesora)
+        document.addEventListener('keydown', function(e) {
+            // Presionar Ctrl+Shift+A para mostrar panel de admin
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                // Verificar que no esté ya visible
+                const adminPanel = document.getElementById('adminPanel');
+                if (adminPanel.style.display !== 'none') {
+                    return; // Ya está visible
+                }
+                
+                const password = prompt('🔐 Acceso de Administración - Profesora Diestre\n\nIngrese su contraseña:');
+                if (password === 'consultas2024') {  
+                    adminPanel.style.display = 'flex';
+                    // Mostrar mensaje de acceso exitoso
+                    setTimeout(() => {
+                        alert('✅ Acceso de administración activado\n\nAhora puede:\n• Ver todas las reservas detalladas\n• Exportar lista de estudiantes\n• Limpiar reservas si es necesario\n• Probar envío de emails\n\n💡 Use "❌ Ocultar Panel" para volver a vista de estudiante');
+                    }, 100);
+                } else if (password !== null && password !== '') {
+                    alert('❌ Contraseña incorrecta\n\nEsta función está restringida solo para la profesora.');
+                }
+            }
+        });
+
+        // EmailJS Configuration
+        // IMPORTANTE: Reemplaza estos valores con tus propias credenciales de EmailJS
+        const EMAILJS_CONFIG = {
+            publicKey: 'xt4gn99QreHLUu1QC',    // Tu Public Key configurado
+            serviceID: 'service_0b8dssr',    // Tu Service ID configurado
+            templateConfirm: 'template_5l6pkuk', // Template para confirmación
+            templateCancel: 'template_cancel'    // Template para cancelación (no usado)
+        };
+
+        // Initialize EmailJS
+        (function() {
+            // Inicializar EmailJS con tus credenciales
+            emailjs.init({
+                publicKey: EMAILJS_CONFIG.publicKey
+            });
+            console.log('✅ EmailJS inicializado correctamente para envío de confirmaciones');
+        })();
+
+        // State management
+        let selectedTime = null;
+        let timeSlots = [];
+        let reservations = [];  // Iniciar vacío
+        let updateInterval;
+
+        // Limpiar localStorage al cargar
+        localStorage.setItem('consultReservations', JSON.stringify([]));
+
+        // Set tomorrow's date
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowString = tomorrow.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            generateTimeSlots();
+            updateRecentReservations();
+        });
+
+        // Toggle group mode
+        function toggleGroupMode(isGroup) {
+            isGroupMode = isGroup;
+            document.getElementById('individualBtn').classList.toggle('active', !isGroup);
+            document.getElementById('groupBtn').classList.toggle('active', isGroup);
+            document.getElementById('groupMembersSection').classList.toggle('show', isGroup);
+            
+            // Clear group list when switching to individual
+            if (!isGroup) {
+                document.getElementById('groupMembersList').value = '';
+            }
+        }
+
+        // Start live updates
+        function startLiveUpdates() {
+            updateInterval = setInterval(() => {
+                refreshSlots();
+            }, 5000); // Update every 5 seconds
+        }
+
+        // Refresh slots
+        function refreshSlots() {
+            // Get latest reservations
+            reservations = JSON.parse(localStorage.getItem('consultReservations') || '[]');
+            generateTimeSlots();
+            updateRecentReservations();
+        }
+
+        // Generate time slots (8:20 hasta 10:40)
+        function generateTimeSlots() {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+            timeSlots = [];
+            
+            // Horarios específicos de 8:20 a 10:40
+            const slots = [
+                { start: '08:20', end: '08:40' },
+                { start: '08:40', end: '09:00' },
+                { start: '09:00', end: '09:20' },
+                { start: '09:20', end: '09:40' },
+                { start: '09:40', end: '10:00' },
+                { start: '10:00', end: '10:20' },
+                { start: '10:20', end: '10:40' }
+            ];
+            
+            slots.forEach(slotTime => {
+                const slotKey = `${tomorrow.toISOString().split('T')[0]}_${slotTime.start}`;
+                
+                // Check if slot is reserved (only confirmed or pending count as occupied)
+                const isOccupied = reservations.some(r => r.slotKey === slotKey && (r.status === 'confirmed' || r.status === 'pending'));
+                
+                const slot = {
+                    time: slotTime.start,
+                    endTime: slotTime.end,
+                    slotKey: slotKey,
+                    occupied: isOccupied
+                };
+                
+                timeSlots.push(slot);
+                createSlotElement(slot);
+            });
+        }
+
+        // Create slot element (simplified for 1 person)
+        function createSlotElement(slot) {
+            const slotEl = document.createElement('div');
+            slotEl.className = `time-slot ${slot.occupied ? 'occupied' : ''}`;
+            slotEl.dataset.time = slot.time;
+            slotEl.dataset.slotKey = slot.slotKey;
+            
+            slotEl.innerHTML = `
+                <span class="slot-time">${slot.time} - ${slot.endTime}</span>
+                <span class="slot-status ${slot.occupied ? 'occupied-status' : 'available'}">
+                    ${slot.occupied ? 'Reservado' : 'Disponible'}
+                </span>
+            `;
+            
+            if (!slot.occupied) {
+                slotEl.addEventListener('click', () => selectTimeSlot(slot));
+            }
+            
+            document.getElementById('timeSlots').appendChild(slotEl);
+        }
+
+        // Select time slot
+        function selectTimeSlot(slot) {
+            selectedTime = slot;
+            
+            // Update UI
+            document.querySelectorAll('.time-slot').forEach(el => {
+                el.classList.remove('selected');
+                const statusEl = el.querySelector('.slot-status');
+                if (!el.classList.contains('occupied')) {
+                    statusEl.className = 'slot-status available';
+                    statusEl.textContent = 'Disponible';
+                }
+            });
+            
+            const selectedEl = document.querySelector(`[data-slot-key="${slot.slotKey}"]`);
+            selectedEl.classList.add('selected');
+            const statusEl = selectedEl.querySelector('.slot-status');
+            statusEl.className = 'slot-status selected-status';
+            statusEl.textContent = 'Seleccionado';
+            
+            // Show selected time
+            document.getElementById('selectedTimeDisplay').classList.add('show');
+            document.getElementById('selectedTimeText').textContent = `${slot.time} - ${slot.endTime}`;
+            
+            // Enable submit button
+            document.getElementById('submitBtn').disabled = false;
+            
+            // Scroll to form
+            document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Toggle companion field
+        function toggleCompanion() {
+            const isAccompanied = document.querySelector('input[name="accompanied"]:checked').value === 'yes';
+            const companionInfo = document.getElementById('companionInfo');
+            const companionNameField = document.getElementById('companionName');
+            
+            if (isAccompanied) {
+                companionInfo.style.display = 'block';
+            } else {
+                companionInfo.style.display = 'none';
+                companionNameField.value = '';
+            }
+        }
+
+        // Handle form submission (with companion info)
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedTime) {
+                alert('Por favor selecciona un horario');
+                return;
+            }
+            
+            const isAccompanied = document.querySelector('input[name="accompanied"]:checked').value === 'yes';
+            const companionName = isAccompanied ? document.getElementById('companionName').value.trim() : '';
+            
+            if (isAccompanied && !companionName) {
+                alert('Por favor indica el nombre de tu acompañante');
+                return;
+            }
+            
+            const studentName = document.getElementById('studentName').value.trim();
+            const studentEmail = document.getElementById('studentEmail').value.trim();
+            const topic = document.getElementById('topic').value.trim();
+            
+            // Validaciones adicionales
+            if (!studentEmail) {
+                alert('Por favor ingresa tu correo electrónico');
+                return;
+            }
+            
+            if (!studentEmail.includes('@')) {
+                alert('Por favor ingresa un correo electrónico válido');
+                return;
+            }
+
+            const formData = {
+                studentName: studentName,
+                studentEmail: studentEmail,
+                topic: topic,
+                isAccompanied: isAccompanied,
+                companionName: companionName,
+                time: selectedTime.time,
+                endTime: selectedTime.endTime,
+                slotKey: selectedTime.slotKey,
+                date: tomorrowString,
+                location: '4to Piso, Nuevo Edificio Interdisciplinario (N°30)',
+                createdAt: new Date().toISOString(),
+                status: 'pending', // pending, confirmed, cancelled
+                id: 'res_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            };
+            
+            // Save reservation
+            reservations.push(formData);
+            localStorage.setItem('consultReservations', JSON.stringify(reservations));
+            
+            // Debug: verificar que los datos se guardaron correctamente
+            console.log('✅ Reserva guardada:', formData);
+            
+            // Show success message with details
+            let successDetails = `
+                <strong>Fecha:</strong> ${tomorrowString}<br>
+                <strong>Hora:</strong> ${selectedTime.time} - ${selectedTime.endTime}<br>
+                <strong>Lugar:</strong> 4to Piso, Edificio N°30<br>
+                <strong>Solicitante:</strong> ${formData.studentName}
+            `;
+            
+            if (isAccompanied) {
+                successDetails += `<br><strong>Acompañante:</strong> ${companionName}`;
+            }
+            
+            document.getElementById('successDetails').innerHTML = successDetails;
+            document.getElementById('successMessage').classList.add('show');
+            
+            // Refresh UI
+            generateTimeSlots();
+            updateRecentReservations();
+            
+            // Reset form
+            document.getElementById('bookingForm').reset();
+            document.getElementById('companionInfo').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('selectedTimeDisplay').classList.remove('show');
+            selectedTime = null;
+            
+            // Hide success message after 8 seconds
+            setTimeout(() => {
+                document.getElementById('successMessage').classList.remove('show');
+            }, 8000);
+            
+            console.log('Nueva reserva registrada:', formData);
+        });
+
+        // Update recent reservations display (public view - only show occupied times with status)
+        function updateRecentReservations() {
+            const listEl = document.getElementById('recentReservations');
+            const recentReservations = reservations
+                .filter(r => r.date === tomorrowString && (r.status === 'confirmed' || r.status === 'pending'))
+                .sort((a, b) => a.time.localeCompare(b.time));
+            
+            if (recentReservations.length === 0) {
+                listEl.innerHTML = '<p style="color: #6b7280;">No hay horarios reservados aún</p>';
+            } else {
+                listEl.innerHTML = recentReservations.map(r => {
+                    const statusDisplay = r.status === 'confirmed' ? 
+                        '<span style="color: #28a745;">✓ Confirmado</span>' :
+                        '<span style="color: #ffc107;">⏳ Pendiente</span>';
+                    
+                    return `
+                        <div class="reservation-item">
+                            <strong>${r.time} - ${r.endTime}</strong>
+                            <br>
+                            ${statusDisplay}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Admin functions
+        function toggleAdminView() {
+            updateAdminList();
+            document.getElementById('adminModal').classList.add('show');
+        }
+
+        function closeAdminView() {
+            document.getElementById('adminModal').classList.remove('show');
+        }
+
+        function updateAdminList() {
+            const adminListEl = document.getElementById('adminReservationsList');
+            const allReservations = reservations
+                .filter(r => r.date === tomorrowString)
+                .sort((a, b) => a.time.localeCompare(b.time));
+            
+            if (allReservations.length === 0) {
+                adminListEl.innerHTML = '<div class="no-reservations">No hay reservas aún</div>';
+            } else {
+                let tableHTML = `
+                    <p style="margin-bottom: 10px;">Total de reservas: <strong>${allReservations.length}</strong></p>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Estudiante</th>
+                                <th>Acompañante</th>
+                                <th>Correo</th>
+                                <th>Pregunta/Tema</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                allReservations.forEach(r => {
+                    const statusBadge = r.status === 'confirmed' ? 
+                        '<span style="background: #d4edda; color: #155724; padding: 3px 8px; border-radius: 10px; font-size: 0.8em;">✓ Confirmada</span>' :
+                        r.status === 'cancelled' ?
+                        '<span style="background: #f8d7da; color: #721c24; padding: 3px 8px; border-radius: 10px; font-size: 0.8em;">✗ Cancelada</span>' :
+                        '<span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 10px; font-size: 0.8em;">⏳ Pendiente</span>';
+                    
+                    const actions = r.status === 'pending' ? `
+                        <button onclick="confirmReservation('${r.id}')" 
+                                style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-right: 5px; cursor: pointer;">
+                            ✓ Confirmar
+                        </button>
+                        <button onclick="cancelReservationSimple('${r.id}')" 
+                                style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                            ✗ Cancelar
+                        </button>
+                    ` : '-';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td><strong>${r.time} - ${r.endTime}</strong><br>${statusBadge}</td>
+                            <td>${r.studentName}</td>
+                            <td>${r.isAccompanied ? r.companionName : '-'}</td>
+                            <td><a href="mailto:${r.studentEmail}">${r.studentEmail}</a></td>
+                            <td style="max-width: 200px;">${r.topic}</td>
+                            <td>${actions}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                adminListEl.innerHTML = tableHTML;
+            }
+        }
+
+        function exportReservations() {
+            const allReservations = reservations
+                .filter(r => r.date === tomorrowString)
+                .sort((a, b) => a.time.localeCompare(b.time));
+            
+            if (allReservations.length === 0) {
+                alert('No hay reservas para exportar');
+                return;
+            }
+            
+            let csvContent = 'Hora,Nombre,Acompañante,Correo,Pregunta/Tema\n';
+            allReservations.forEach(r => {
+                const companion = r.isAccompanied ? r.companionName : 'No';
+                csvContent += `"${r.time}-${r.endTime}","${r.studentName}","${companion}","${r.studentEmail}","${r.topic}"\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `reservas_consulta_${tomorrow.toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearAllReservations() {
+            if (confirm('¿Estás segura de que quieres eliminar TODAS las reservas? Esta acción no se puede deshacer.')) {
+                reservations = [];
+                localStorage.setItem('consultReservations', JSON.stringify(reservations));
+                generateTimeSlots();
+                updateRecentReservations();
+                alert('Todas las reservas han sido eliminadas');
+            }
+        }
+
+        // Removed unused functions
+        function showBuildingPhoto() {
+            document.getElementById('photoModal').classList.add('show');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.remove('show');
+        }
+
+        window.onclick = function(event) {
+            const photoModal = document.getElementById('photoModal');
+            const adminModal = document.getElementById('adminModal');
+            if (event.target == photoModal) {
+                closePhotoModal();
+            }
+            if (event.target == adminModal) {
+                closeAdminView();
+            }
+        }
+
+        // Funciones para confirmar/cancelar reservas
+        async function confirmReservation(reservationId) {
+            const reservation = reservations.find(r => r.id === reservationId);
+            if (!reservation) return;
+            
+            if (confirm(`¿Confirmar la reserva de ${reservation.studentName} para ${reservation.time} - ${reservation.endTime}?\n\nSe enviará un correo de confirmación automáticamente.`)) {
+                // Mostrar indicador de envío
+                const confirmBtn = document.querySelector(`button[onclick="confirmReservation('${reservationId}')"]`);
+                const originalText = confirmBtn.textContent;
+                confirmBtn.textContent = '📧 Enviando...';
+                confirmBtn.disabled = true;
+                
+                reservation.status = 'confirmed';
+                localStorage.setItem('consultReservations', JSON.stringify(reservations));
+                
+                // Enviar email de confirmación
+                const emailResult = await sendConfirmationEmail(reservation);
+                
+                // Actualizar vista admin
+                updateAdminList();
+                
+                if (emailResult.success) {
+                    alert(`✅ Reserva confirmada\n\n📧 Email de confirmación enviado exitosamente a:\n${reservation.studentEmail}`);
+                } else {
+                    alert(`✅ Reserva confirmada\n\n❌ Error enviando email:\n${emailResult.error.text || 'Error desconocido'}\n\nLa reserva está confirmada, pero el estudiante no recibió el email.`);
+                }
+            }
+        }
+
+        // Cancelación simple sin envío de email
+        function cancelReservationSimple(reservationId) {
+            const reservation = reservations.find(r => r.id === reservationId);
+            if (!reservation) return;
+            
+            if (confirm(`¿Cancelar la reserva de ${reservation.studentName} para ${reservation.time} - ${reservation.endTime}?\n\nEl horario quedará disponible nuevamente.`)) {
+                reservation.status = 'cancelled';
+                reservation.cancellationReason = 'Cancelada por la profesora';
+                localStorage.setItem('consultReservations', JSON.stringify(reservations));
+                
+                // Actualizar vista admin y liberar el horario
+                updateAdminList();
+                generateTimeSlots();
+                
+                alert(`❌ Reserva cancelada\n\nEl horario ${reservation.time} - ${reservation.endTime} ha sido liberado y está disponible nuevamente.`);
+            }
+        }
+
+        // Envío real de email de confirmación
+        async function sendConfirmationEmail(reservation) {
+            try {
+                // Debug: verificar que el email no esté vacío
+                if (!reservation.studentEmail || reservation.studentEmail.trim() === '') {
+                    console.error('❌ Email del estudiante está vacío:', reservation);
+                    return { success: false, error: { text: 'Email del estudiante está vacío' } };
+                }
+
+                const templateParams = {
+                    // Múltiples nombres de campos para asegurar que funcione
+                    to_email: reservation.studentEmail.trim(),
+                    email: reservation.studentEmail.trim(),
+                    user_email: reservation.studentEmail.trim(),
+                    to_name: reservation.studentName,
+                    student_name: reservation.studentName,
+                    reservation_date: reservation.date,
+                    reservation_time: reservation.time,
+                    reservation_end_time: reservation.endTime,
+                    location: reservation.location,
+                    has_companion: reservation.isAccompanied ? 'Sí' : 'No',
+                    companion_name: reservation.isAccompanied ? reservation.companionName : 'N/A',
+                    consultation_topic: reservation.topic,
+                    professor_name: 'Jacinta Diestre',
+                    reply_to: 'jacinta.diestre@gmail.com'
+                };
+
+                console.log('📧 Enviando email con parámetros:', templateParams);
+
+                const response = await emailjs.send(
+                    EMAILJS_CONFIG.serviceID,
+                    EMAILJS_CONFIG.templateConfirm,
+                    templateParams
+                );
+
+                console.log('✅ Email de confirmación enviado exitosamente:', response);
+                return { success: true, response };
+                
+            } catch (error) {
+                console.error('❌ Error enviando email de confirmación:', error);
+                return { success: false, error };
+            }
+        }
+
+        // Envío real de email de cancelación
+        async function sendCancellationEmail(reservation) {
+            // Si EmailJS está configurado, enviar email real
+            if (EMAILJS_CONFIG.publicKey !== 'TU_PUBLIC_KEY_AQUI') {
+                try {
+                    const templateParams = {
+                        to_email: reservation.studentEmail,
+                        to_name: reservation.studentName,
+                        student_name: reservation.studentName,
+                        reservation_date: reservation.date,
+                        reservation_time: reservation.time,
+                        reservation_end_time: reservation.endTime,
+                        cancellation_reason: reservation.cancellationReason,
+                        professor_name: 'Jacinta Diestre',
+                        reply_to: 'jacinta.diestre@uc.cl' // Reemplazar con tu email real
+                    };
+
+                    const response = await emailjs.send(
+                        EMAILJS_CONFIG.serviceID,
+                        EMAILJS_CONFIG.templateCancel,
+                        templateParams
+                    );
+
+                    console.log('✅ Email de cancelación enviado exitosamente:', response);
+                    return { success: true, response };
+                    
+                } catch (error) {
+                    console.error('❌ Error enviando email de cancelación:', error);
+                    return { success: false, error };
+                }
+            } else {
+                // Modo simulación - mostrar en consola
+                console.log('📧 SIMULACIÓN - Email de cancelación:', {
+                    to: reservation.studentEmail,
+                    subject: '❌ Consulta cancelada - Prof. Jacinta Diestre',
+                    template_data: {
+                        studentName: reservation.studentName,
+                        date: reservation.date,
+                        time: `${reservation.time} - ${reservation.endTime}`,
+                        reason: reservation.cancellationReason
+                    }
+                });
+                return { success: true, simulated: true };
+            }
+        }
+
+        // Función de test para probar envío de email
+        async function testEmail() {
+            const testEmail = prompt('Ingresa tu email para probar:', 'jacinta.diestre@gmail.com');
+            if (!testEmail) return;
+            
+            const testReservation = {
+                studentName: 'Test Student',
+                studentEmail: testEmail,
+                date: 'mañana, 26 de agosto de 2025',
+                time: '09:00',
+                endTime: '09:20',
+                location: '4to Piso, Nuevo Edificio Interdisciplinario (N°30)',
+                isAccompanied: false,
+                companionName: '',
+                topic: 'Consulta de prueba para verificar funcionamiento del sistema'
+            };
+            
+            console.log('🧪 Enviando email de prueba...');
+            const result = await sendConfirmationEmail(testReservation);
+            
+            if (result.success) {
+                alert('✅ Email de prueba enviado exitosamente!\n\nRevisa tu bandeja de entrada.');
+            } else {
+                alert('❌ Error enviando email de prueba:\n\n' + (result.error.text || JSON.stringify(result.error)));
+                console.error('Error completo:', result.error);
+            }
+        }
+
+        // Función para ocultar panel de administración
+        function hideAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'none';
+            alert('👥 Vista de estudiante activada\n\nEl panel de administración está oculto.\n\n💡 Use Ctrl+Shift+A para volver a acceder (solo profesora)');
+        }
+    </script>
+</body>
+</html>
