@@ -1,4 +1,4 @@
-# 📅 Sistema de Reserva horario de Consultas - Prof. Jacinta Diestre
+# 📅 Sistema de Reserva horario de Preguntas - Prof. Jacinta Diestre
 
 Sistema web para reserva de horarios de consulta académica con envío automático de emails de confirmación.
 
@@ -34,4 +34,4 @@ Para envío real de emails, configurar EmailJS siguiendo `INSTRUCCIONES_EMAIL.md
 2. **Profesora:** Ctrl+Shift+A para panel administrativo
 
 ---
-*Sistema desarrollado con Claude Code para la Pontificia Universidad Católica de Chile*
+
